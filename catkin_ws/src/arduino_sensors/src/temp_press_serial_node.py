@@ -10,6 +10,7 @@
 import rospy
 import serial
 from std_msgs.msg import String
+from robotx_bionic_msgs.msg import TemperaturePressure
 
 class TempPressSerialNode(object):
 	def __init__(self):
@@ -18,14 +19,23 @@ class TempPressSerialNode(object):
 		port = rospy.get_param("~port", "/dev/ttyUSB0")
 		self.ard = serial.Serial(port, 9600)
 
-		self.temp_press_pub = rospy.Publisher('~temp_press', String, queue_size = 10)
+		self.temp_press_pub = rospy.Publisher('~temp_press', TemperaturePressure, queue_size = 10)
 
 	def cb(self, no_use):
 		res_str = self.ard.readline()
-		print res_str
-		temp_press_msg = String()
-		temp_press_msg.data = res_str
+		temp =  res_str.split(" ")[1].split("\r")[0]
+		press = res_str.split(" ")[0]
+		print "temperature: ", temp
+		print "pressure: ", press
+		print "---------------------"
+		temp_press_msg = TemperaturePressure()
+		temp_press_msg.header.stamp = rospy.Time.now()
+		temp_press_msg.temperature = temp
+		temp_press_msg.pressure = press
 		self.temp_press_pub.publish(temp_press_msg)
+		#temp_press_msg = String()
+		#temp_press_msg.data = res_str
+		#self.temp_press_pub.publish(temp_press_msg)
 
 	def onShutdown(self):
 		rospy.loginfo("[%s] Shutdown " %(self.node_name))
@@ -34,5 +44,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_press_serial_node", anonymous = False)
 	temp_press_serial_node = TempPressSerialNode()
 	rospy.on_shutdown(temp_press_serial_node.onShutdown)
-	rospy.Timer(rospy.Duration.from_sec(1.0), temp_press_serial_node.cb)
+	rospy.Timer(rospy.Duration.from_sec(0.2), temp_press_serial_node.cb)
 	rospy.spin()
