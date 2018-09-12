@@ -3,12 +3,14 @@
   <arg name="camera_name" default="/rgb" />
   <arg name="camera_frame" default="camera" />
   <arg name="image_topic" default="image_rect_color" />
-
+  <arg name="veh"/>
   
   <!-- Apriltag detection -->
+<group ns="$(arg veh)">
   <include file="$(find apriltags2_ros)/launch/continuous_detection.launch">
       <arg name="camera_name" value="$(arg camera_name)"/>
       <arg name="camera_frame" value="$(arg camera_frame)"/>
       <arg name="image_topic" value="$(arg image_topic)"/>
-  </include>    
+  </include>
+</group>    
 </launch>
