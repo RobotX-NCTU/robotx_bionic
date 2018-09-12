@@ -1,0 +1,12 @@
+<launch>
+  <!-- Parameters for apriltag2 ros continuous node-->
+  <arg name="port" default="/dev/ttyUSB0" />
+  <arg name="veh"/>
+
+  
+  <!-- Apriltag detection -->
+<group ns="$(arg veh)">
+  <include file="$(find arduino_sensors)/launch/temp_press_serial_node.launch">
+  </include>
+</group>    
+</launch>

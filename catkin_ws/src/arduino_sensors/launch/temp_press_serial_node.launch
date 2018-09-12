@@ -1,0 +1,9 @@
+<launch>
+	<arg name="port" default="/dev/ttyUSB0" doc="Arduino port"/>
+	<arg name="pkg_name" default="arduino_sensors" doc="ros package name"/>
+	<arg name="node_name" default="temp_press_serial_node" doc="ros node name"/>
+
+	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)" output="screen">
+		<param name="port" value="$(arg port)"/>
+	</node>
+</launch>
