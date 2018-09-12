@@ -3,7 +3,7 @@
   <arg name="camera_name" default="/rgb" />
   <arg name="camera_frame" default="camera" />
   <arg name="image_topic" default="image_rect_color" />
-
+  <arg name="veh"/>
   
   <!-- Apriltag detection -->
 <group ns="$(arg veh)">
