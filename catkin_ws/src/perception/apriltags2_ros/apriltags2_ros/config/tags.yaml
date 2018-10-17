@@ -19,6 +19,7 @@
 #   ]
 standalone_tags:
   [
+     {id: 0, size: 0.54, name: WAM-V_back},
      {id: 500, size: 0.54, name: WAM-V_back},
   ]
 # ## Tag bundle definitions
