@@ -17,11 +17,45 @@ $ source catkin_ws/devel/setup.bash
 $ roslaunch zed_wrapper zed_camera.launch veh:=bamboobota
 ```
 
-Apriltag Localization
+Apriltag Localization 
 ```
 $ cd ~/robotx_bionic
 $ source environment.sh
 $ roslaunch robotx_bionic apriltag_localization.launch veh:=bamboobota camera_name:=rgb
+```
+
+Apriltag Localization in Gazebo 
+```
+lauanch gazebo world
+$ cd ~/robotx_gazebo
+$ source environment.sh
+$ roslaunch robotx_gazebo bamboolake_bionic.launch 
+
+run waypoint navigation contoller
+$ cd ~/robotx_gazebo
+$ source environment.sh
+$ rosrun robotx_gazebo WAMV_PID_controller.py
+
+gps imu localization
+$ cd ~/robotx_nctu
+$ source environment.sh
+$ roslaunch localization gps_imu_localization_gazebo.launch
+
+visualization
+$ cd ~/robotx_gazebo
+$ source environment.sh
+$ rviz
+
+set waypoints
+$ cd ~/robotx_gazebo
+$ source environment.sh
+$ rosservice call /add_waypoint  20  0 0 0
+$ rosservice call /add_waypoint  25  5 0 0
+$ rosservice call /add_waypoint  25 10 0 0
+$ rosservice call /add_waypoint  30 15 0 0
+$ rosservice call /add_waypoint  40 15 0 0
+start navigation
+$ rosservice call /start_waypoint_nav "{}"
 ```
 
 ##  environment sensors (Pi 3)
