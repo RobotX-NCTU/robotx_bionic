@@ -12,5 +12,10 @@
       <arg name="camera_frame" value="$(arg camera_frame)"/>
       <arg name="image_topic" value="$(arg image_topic)"/>
   </include>
+  
+  <remap from="mocap_localization_node/tag_detections" to="tag_detections"/>
+  <include file="$(find apriltag_detection_mapping)/launch/mocap_localization_node.launch">
+      <arg name="veh" value="$(arg veh)"/>
+  </include>
 </group>    
 </launch>

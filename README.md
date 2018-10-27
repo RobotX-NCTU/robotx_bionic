@@ -56,6 +56,10 @@ $ rosservice call /add_waypoint  30 15 0 0
 $ rosservice call /add_waypoint  40 15 0 0
 start navigation
 $ rosservice call /start_waypoint_nav "{}"
+
+apriltag localization
+roslaunch robotx_bionic apriltag_localization.launch veh:=wamv camera_name:=/watchtower_down/zed_mid/rgb
+
 ```
 
 ##  environment sensors (Pi 3)
