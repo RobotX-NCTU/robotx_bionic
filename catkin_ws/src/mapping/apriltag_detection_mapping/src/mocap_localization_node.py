@@ -12,18 +12,18 @@ class MocapLocalizationNode(object):
         self.node_name = rospy.get_name()
 
         # base tag id      
-        self.base_tag_id = [504, 505, 507]
+        self.base_tag_id = [505, 504, 507]
         # vehicle tag id    
         self.vehicle_tag_id = [501, 502, 503]
 
         # base tag groundtruth point
-        self.base_tag_point = np.array([[10, 0, 0], [0, 0, 0], [0, 5, 0]], dtype='f')
+        self.base_tag_point = np.array([[0, 0, 0], [0, 20, 0], [30, 0, 0]], dtype='f')
         # base tag detection point     
         self.obser_tag_point = np.zeros((3, 3), dtype='f')
         self.test_tag_point = np.zeros((3, 4), dtype='f')
 
         # vehicle tag detection point
-        self.vehicle_tag_point_pair = np.zeros((2, 4), dtype='f')
+        self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
 
         # legal or illegal localization
         self.tag_detect_count = 0
@@ -36,26 +36,28 @@ class MocapLocalizationNode(object):
     def processTagDetections(self,tag_detections_msg):
         ## print "-----------------------------------------------"
         # assign base tag coordination
-        self.base_tag_point = np.array([[10, 0, 0], [0, 0, 0], [0, 5, 0]], dtype='f')
+        self.base_tag_point = np.array([[0, 0, 0], [0, 20, 0], [30, 0, 0]], dtype='f')
+        self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
         for tag_detection in tag_detections_msg.detections:
+            print tag_detection.id[0]
         	# extract base tag detection
             for index, tag_id in enumerate(self.base_tag_id):
-                print tag_detection.id[0],tag_id
+                #print tag_detection.id[0],tag_id
                 if tag_detection.id[0] == tag_id:
                     self.obser_tag_point[index, 0] = tag_detection.pose.pose.pose.position.z
-                    self.obser_tag_point[index, 1] = -1 * tag_detection.pose.pose.pose.position.x                   
+                    self.obser_tag_point[index, 1] = tag_detection.pose.pose.pose.position.x                   
                     self.obser_tag_point[index, 2] = tag_detection.pose.pose.pose.position.y
                     self.test_tag_point[index, 0] = tag_detection.pose.pose.pose.position.z
-                    self.test_tag_point[index, 1] = -1 * tag_detection.pose.pose.pose.position.x                  
+                    self.test_tag_point[index, 1] =  tag_detection.pose.pose.pose.position.x                  
                     self.test_tag_point[index, 2] = tag_detection.pose.pose.pose.position.y
                     self.test_tag_point[index, 3] = 1
                     self.tag_detect_count += 1
             # extract vehicle tag detection
             for index, tag_id in enumerate(self.vehicle_tag_id):
-                print tag_detection.id[0], tag_id
+                #print tag_detection.id[0], tag_id
                 if tag_detection.id[0] == tag_id:
                     self.vehicle_tag_point_pair[index, 0] = tag_detection.pose.pose.pose.position.z
-                    self.vehicle_tag_point_pair[index, 1] = -1 * tag_detection.pose.pose.pose.position.x               
+                    self.vehicle_tag_point_pair[index, 1] = tag_detection.pose.pose.pose.position.x               
                     self.vehicle_tag_point_pair[index, 2] = tag_detection.pose.pose.pose.position.y
                     self.vehicle_tag_point_pair[index, 3] = 1 
                     self.tag_detect_count += 1 
@@ -76,7 +78,6 @@ class MocapLocalizationNode(object):
         Mtd = np.vstack((self.base_tag_point[0], self.base_tag_point[1], self.base_tag_point[2])).transpose()
         Mmd = np.vstack((self.obser_tag_point[0], self.obser_tag_point[1], self.obser_tag_point[2])).transpose()
 
-        print Mtd, Mmd
         H = np.dot(Mmd, Mtd.transpose())
         [U, D, V] = np.linalg.svd(H,full_matrices=1)
         R = np.dot(V,U.transpose())
