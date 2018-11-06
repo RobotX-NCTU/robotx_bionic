@@ -13,6 +13,7 @@
       <arg name="camera_name" value="/$(arg watchtower_down)/zed_mid/rgb"/>
       <arg name="camera_frame" value="$(arg camera_frame)"/>
       <arg name="image_topic" value="$(arg image_topic)"/>
+      <arg name="system_number" value="2"/>
   </include>
 </group>
 
@@ -22,6 +23,7 @@
       <arg name="camera_name" value="/$(arg watchtower_left)/zed_mid/rgb"/>
       <arg name="camera_frame" value="$(arg camera_frame)"/>
       <arg name="image_topic" value="$(arg image_topic)"/>
+      <arg name="system_number" value="1"/>
   </include>
 </group>
 
