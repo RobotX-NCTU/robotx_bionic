@@ -2,10 +2,12 @@
 import rospy
 import numpy as np
 import scipy as sp
+import math
 from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
-from geometry_msgs.msg import PoseArray, Pose
+from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point
 from nav_msgs.msg import Odometry
+from tf.transformations import quaternion_from_euler
 
 
 class MocapLocalizationNode(object):
@@ -14,10 +16,8 @@ class MocapLocalizationNode(object):
 
         # base tag id~system_number
         self.system_number = rospy.get_param("~system_number", 1)
-        #print self.system_number
 
         # base tag id      
-        #self.base_tag_id = [505, 504, 507]
         self.base_tag_id_group = [[504, 505, 506, 507],[508, 509, 510, 511]]
         self.base_tag_id = self.base_tag_id_group[self.system_number-1]
         # vehicle tag id    
@@ -25,27 +25,30 @@ class MocapLocalizationNode(object):
 
         # base tag groundtruth point
         self.base_tag_point = np.array([[0, 0, 0], [20, 0, 0], [0, 20, 0], [20, 20, 0]], dtype='f')
-        # base tag detection point     
-        #self.obser_tag_point = np.zeros((3, 3), dtype='f')
-        #self.test_tag_point = np.zeros((3, 4), dtype='f')
 
-        # vehicle tag detection point
-        #self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
+        # shift between gps and apriltag localization
+        self.shift_x = 5 - 0.25
+        self.shift_y = -5 + 0.25
+        # shift bwtween tag and center of wamv
+        self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0]], dtype='f')
 
         # legal or illegal localization
         self.base_tag_detect_count = 0
         self.vehicle_tag_detect_count = 0
 
+        # previous position of vehicle
+        self.pre_vehicle_loalization = Point()
+
         # Subscribers
         self.sub_tag_detections = rospy.Subscriber("~tag_detections", AprilTagDetectionArray, self.processTagDetections, queue_size=1)
         # Publishers
-        self.pub_vehicle_pose_pair = rospy.Publisher("~vehicle_pose_pair", PoseArray, queue_size=1)
+        #self.pub_vehicle_pose_pair = rospy.Publisher("~vehicle_pose_pair", PoseArray, queue_size=1)
         self.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
 
     def processTagDetections(self,tag_detections_msg):
         ## print "-----------------------------------------------"
         # assign base tag coordination
-        self.base_tag_point = np.array([[0, 0, 0], [20, 0, 0], [0, 20, 0], [20, 20, 0]], dtype='f') 
+        self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f') 
         self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
         self.obser_tag_point = np.zeros((4, 3), dtype='f')
         self.test_tag_point = np.zeros((4, 4), dtype='f')
@@ -106,9 +109,6 @@ class MocapLocalizationNode(object):
         Mtd = Mtd.transpose()
         Mmd = Mmd.transpose()
 
-        self.base_tag_detect_count = 0
-        self.vehicle_tag_detect_count = 0
-
         #p_ct = (self.base_tag_point[0] + self.base_tag_point[1] + self.base_tag_point[2])/3
         #p_cm = (self.obser_tag_point[0] + self.obser_tag_point[1] + self.obser_tag_point[2])/3
 
@@ -138,6 +138,31 @@ class MocapLocalizationNode(object):
         print "vehicle tag detection after transformation"
         print np.dot(T,self.vehicle_tag_point_pair.transpose())
 
+
+        vehicle_loalization = np.dot(T,self.vehicle_tag_point_pair.transpose())
+        shift = self.shift_center.transpose()
+        for i in range(3):
+            if vehicle_loalization[:,i][3] != 0:
+                for j in range(4):
+                    vehicle_loalization[:,i][j] += shift[:,i][j] 
+                    #print vehicle_loalization[:,i][0]
+        print "after shift"
+        print vehicle_loalization
+        vehicle_loalization = vehicle_loalization.sum(axis=1)/self.vehicle_tag_detect_count
+        vehicle_loalization[2] = 0
+        print vehicle_loalization
+
+
+        self.base_tag_detect_count = 0
+        self.vehicle_tag_detect_count = 0
+
+        vehicle_pose = Pose()
+        vehicle_pose.position.x = vehicle_loalization[0] + self.shift_x
+        vehicle_pose.position.y = vehicle_loalization[1] + self.shift_y
+        vehicle_pose.position.z = vehicle_loalization[2]
+        self.cb_odom(vehicle_pose.position)
+        self.pre_vehicle_loalization = vehicle_pose.position
+
         #vehicle_point_pair = np.zeros((2, 4), dtype='f')
         #vehicle_point_pair = np.dot(T,self.vehicle_tag_point_pair.transpose())
         #vehicle_pose_pair_msg = PoseArray()
@@ -154,8 +179,29 @@ class MocapLocalizationNode(object):
         odom_msg.header.frame_id = "odom"
         odom_msg.header.stamp = rospy.Time.now()
         odom_msg.pose.pose.position = point
-        print "odem", point
+        odom_msg.pose.pose.orientation = self.get_orientation(point)
+        print "odem", odom_msg.pose.pose
         self.pub_odom.publish(odom_msg)
+
+    def get_orientation(self, point):
+        dx = point.x - self.pre_vehicle_loalization.x
+        dy = point.y - self.pre_vehicle_loalization.y
+        quat_msg = Quaternion()
+        self.quat = []
+        if(dx ==0):
+            self.quat = quaternion_from_euler (0, 0, math.pi*0.5)
+        else:
+            theta = math.atan2(dy, dx)
+            if(theta < 0):
+                theta += math.pi * 2
+            self.quat = quaternion_from_euler (0, 0, theta)
+        print dx, dy, self.quat
+        quat_msg.x = self.quat[0]
+        quat_msg.y = self.quat[1]
+        quat_msg.z = self.quat[2]
+        quat_msg.w = self.quat[3]
+        return quat_msg
+
 
     def onShutdown(self):
         rospy.loginfo("[MocapLocalizationNode] Shutdown.")

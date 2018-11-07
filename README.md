@@ -49,11 +49,7 @@ $ rviz
 set waypoints
 $ cd ~/robotx_gazebo
 $ source environment.sh
-$ rosservice call /add_waypoint  20  0 0 0
-$ rosservice call /add_waypoint  25  5 0 0
-$ rosservice call /add_waypoint  25 10 0 0
-$ rosservice call /add_waypoint  30 15 0 0
-$ rosservice call /add_waypoint  40 15 0 0
+$ rosservice call /add_waypoint  10  0 0 0 && rosservice call /add_waypoint  15  5 0 0 && rosservice call /add_waypoint  15 10 0 0 && rosservice call /add_waypoint  20 15 0 0 && rosservice call /add_waypoint  25 15 0 0 && rosservice call /add_waypoint  30 10 0 0 && rosservice call /add_waypoint  30  5 0 0 && rosservice call /add_waypoint  35  0 0 0 && rosservice call /add_waypoint  40  0 0 0
 start navigation
 $ rosservice call /start_waypoint_nav "{}"
 
