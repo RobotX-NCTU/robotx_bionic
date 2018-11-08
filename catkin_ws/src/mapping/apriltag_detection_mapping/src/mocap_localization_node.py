@@ -5,14 +5,16 @@ import scipy as sp
 import math
 from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
-from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped
+from nav_msgs.msg import Odometry, Path
 from tf.transformations import quaternion_from_euler
 
 
 class MocapLocalizationNode(object):
     def __init__(self):
         self.node_name = rospy.get_name()
+
+        self.verbose=False
 
         # base tag id~system_number
         self.system_number = rospy.get_param("~system_number", 1)
@@ -39,11 +41,16 @@ class MocapLocalizationNode(object):
         # previous position of vehicle
         self.pre_vehicle_loalization = Point()
 
+        # apriltag localization path
+        self.path_msg = Path()
+        self.path_msg.header.frame_id = "odom"
+
         # Subscribers
         self.sub_tag_detections = rospy.Subscriber("~tag_detections", AprilTagDetectionArray, self.processTagDetections, queue_size=1)
         # Publishers
         #self.pub_vehicle_pose_pair = rospy.Publisher("~vehicle_pose_pair", PoseArray, queue_size=1)
-        self.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
+        #.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
+        self.pub_path = rospy.Publisher('~tag_localization_path', Path, queue_size = 20)
 
     def processTagDetections(self,tag_detections_msg):
         ## print "-----------------------------------------------"
@@ -54,7 +61,7 @@ class MocapLocalizationNode(object):
         self.test_tag_point = np.zeros((4, 4), dtype='f')
 
         for tag_detection in tag_detections_msg.detections:
-            print tag_detection.id[0]
+            if(self.verbose): print tag_detection.id[0]
         	# extract base tag detection
             for index, tag_id in enumerate(self.base_tag_id):
                 if tag_detection.id[0] == tag_id:
@@ -77,13 +84,14 @@ class MocapLocalizationNode(object):
                     self.vehicle_tag_detect_count += 1 
 
         # check enough tags detected
-        print 'system: ', self.system_number
-        print 'base tag count:',self.base_tag_detect_count 
-        print 'vehicle tag count:',self.vehicle_tag_detect_count                    
+        if(self.verbose): print 'system: ', self.system_number
+        if(self.verbose): print 'base tag count:',self.base_tag_detect_count 
+        if(self.verbose): print 'vehicle tag count:',self.vehicle_tag_detect_count                    
         if(self.base_tag_detect_count < 3 or self.vehicle_tag_detect_count == 0):
             self.base_tag_detect_count = 0
             self.vehicle_tag_detect_count = 0
-            print 'non enough tags detectecd'
+            if(self.verbose): print 'non enough tags detectecd'
+            rospy.loginfo("non enough tags detectecd")
             return
 
         # remove zero row if only three base apriltag detected
@@ -133,10 +141,10 @@ class MocapLocalizationNode(object):
         #print "tag detection after transformation"
         #print np.dot(T,self.test_tag_point.transpose())
 
-        print "vehicle tag detection"
-        print self.vehicle_tag_point_pair.transpose()
-        print "vehicle tag detection after transformation"
-        print np.dot(T,self.vehicle_tag_point_pair.transpose())
+        if(self.verbose): print "vehicle tag detection"
+        if(self.verbose): print self.vehicle_tag_point_pair.transpose()
+        if(self.verbose): print "vehicle tag detection after transformation"
+        if(self.verbose): print np.dot(T,self.vehicle_tag_point_pair.transpose())
 
 
         vehicle_loalization = np.dot(T,self.vehicle_tag_point_pair.transpose())
@@ -144,13 +152,13 @@ class MocapLocalizationNode(object):
         for i in range(3):
             if vehicle_loalization[:,i][3] != 0:
                 for j in range(4):
-                    vehicle_loalization[:,i][j] += shift[:,i][j] 
+                    vehicle_loalization[:,i][j] += shift[:,i][j]
                     #print vehicle_loalization[:,i][0]
-        print "after shift"
-        print vehicle_loalization
+        if(self.verbose): print "after shift"
+        if(self.verbose): print vehicle_loalization
         vehicle_loalization = vehicle_loalization.sum(axis=1)/self.vehicle_tag_detect_count
         vehicle_loalization[2] = 0
-        print vehicle_loalization
+        if(self.verbose): print vehicle_loalization
 
 
         self.base_tag_detect_count = 0
@@ -160,7 +168,8 @@ class MocapLocalizationNode(object):
         vehicle_pose.position.x = vehicle_loalization[0] + self.shift_x
         vehicle_pose.position.y = vehicle_loalization[1] + self.shift_y
         vehicle_pose.position.z = vehicle_loalization[2]
-        self.cb_odom(vehicle_pose.position)
+        #self.cb_odom(vehicle_pose.position)
+        self.cb_path(vehicle_pose)
         self.pre_vehicle_loalization = vehicle_pose.position
 
         #vehicle_point_pair = np.zeros((2, 4), dtype='f')
@@ -174,12 +183,26 @@ class MocapLocalizationNode(object):
         #    vehicle_pose_pair_msg.poses.append(vehicle_pose)
         #self.pub_vehicle_pose_pair.publish(vehicle_pose_pair_msg)
 
+    def cb_path(self, p):
+        pose_stamped = PoseStamped()
+        pose_stamped.header.frame_id = "odom"
+        pose_stamped.pose = p
+        self.path_msg.header.stamp = rospy.Time.now()
+        self.path_msg.header.seq = pose_stamped.header.seq
+        pose_stamped.header.stamp = self.path_msg.header.stamp
+        self.path_msg.poses.append(pose_stamped)
+        self.pub_path.publish(self.path_msg)
+        print 'poses------------'
+        print self.path_msg.poses
+        print '------------'
+
+
     def cb_odom(self, point):
         odom_msg = Odometry() 
         odom_msg.header.frame_id = "odom"
         odom_msg.header.stamp = rospy.Time.now()
         odom_msg.pose.pose.position = point
-        odom_msg.pose.pose.orientation = self.get_orientation(point)
+        #odom_msg.pose.pose.orientation = self.get_orientation(point)
         print "odem", odom_msg.pose.pose
         self.pub_odom.publish(odom_msg)
 

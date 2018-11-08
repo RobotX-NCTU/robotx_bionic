@@ -20,6 +20,8 @@ class ApriltagDetectionMappingNode(object):
 		self.node_name = rospy.get_name()
 		rospy.loginfo("[%s] Initializing" %(self.node_name))
 
+        self.verbose=False
+
 		# Subscriber
 		self.sub_tag_detect = rospy.Subscriber('/bamboobota/tag_detections', AprilTagDetectionArray, self.cb_tag_detect, queue_size = 10)
 
@@ -35,7 +37,7 @@ class ApriltagDetectionMappingNode(object):
 
 		for i in range(len(detections_msg.detections)):
 			if(detections_msg.detections[i].id[0] == self.tag_id):
-				print "id ", self.tag_id, " detected and transfered to WAM-V state"
+				if(self.verbose) print "id ", self.tag_id, " detected and transfered to WAM-V state"
 				self.detection_to_state(detections_msg.detections[i])
 
 	def detection_to_state(self, detection):
@@ -54,7 +56,7 @@ class ApriltagDetectionMappingNode(object):
 		original_rotation = [original_rotation[0], original_rotation[2], -1 * original_rotation[1]]
 		original_mat = tf.transformations.compose_matrix(None, None, original_rotation, original_position, None)
 		#print "original pose matrix: ", original_mat
-		print "original original_rotation: ", original_position 
+		if(self.verbose): print "original original_rotation: ", original_position 
 		transformed_mat = np.dot(original_mat, trans_mat)
 		#print  "transformed pose matrix: ", transformed_mat
 
