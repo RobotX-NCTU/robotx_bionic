@@ -13,6 +13,8 @@ import numpy as np
 from gazebo_msgs.msg import ModelState
 from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
+from nav_msgs.msg import Odometry, Path
+from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped
 
 
 class ApriltagDetectionMappingNode(object):
@@ -20,24 +22,33 @@ class ApriltagDetectionMappingNode(object):
 		self.node_name = rospy.get_name()
 		rospy.loginfo("[%s] Initializing" %(self.node_name))
 
-        self.verbose=False
+		self.verbose=False
 
 		# Subscriber
-		self.sub_tag_detect = rospy.Subscriber('/bamboobota/tag_detections', AprilTagDetectionArray, self.cb_tag_detect, queue_size = 10)
+		self.sub_tag_detect = rospy.Subscriber('/watchtower_left/wamv/tag_detections', AprilTagDetectionArray, self.cb_tag_detect, queue_size = 10)
 
 		# Publisher
 		self.pub_wamv_state = rospy.Publisher('/gazebo/set_model_state', ModelState, queue_size = 1)
 
 		# Parameters
 		self.wamv_model_name = rospy.get_param("~wamv_model_name", "wamv")
-		self.tag_id = rospy.get_param("~tag_id", 500)
+		self.tag_id = rospy.get_param("~tag_id", 503)
 		self.tf_translation = [0, 0, 0]
 		self.tf_rotation = [math.pi, 0, 0]
+
+		# apriltag localization path
+		self.path_msg = Path()
+		self.path_msg.header.frame_id = "odom"
+
+		self.pub_path = rospy.Publisher('~tag_localization_path', Path, queue_size = 20)
+
 	def cb_tag_detect(self, detections_msg):
 
 		for i in range(len(detections_msg.detections)):
+			print "id ", self.tag_id
 			if(detections_msg.detections[i].id[0] == self.tag_id):
-				if(self.verbose) print "id ", self.tag_id, " detected and transfered to WAM-V state"
+				if(self.verbose):
+					print "id ", self.tag_id, " detected and transfered to WAM-V state"
 				self.detection_to_state(detections_msg.detections[i])
 
 	def detection_to_state(self, detection):
@@ -71,8 +82,21 @@ class ApriltagDetectionMappingNode(object):
 		wamv_state_msg.pose.orientation.y = angles[1]
 		wamv_state_msg.pose.orientation.z = angles[2]
 		wamv_state_msg.pose.orientation.w = angles[3]
-
+		self.cb_path(wamv_state_msg.pose)
 		self.pub_wamv_state.publish(wamv_state_msg)
+
+	def cb_path(self, p):
+		pose_stamped = PoseStamped()
+		pose_stamped.header.frame_id = "odom"
+		pose_stamped.pose = p
+		self.path_msg.header.stamp = rospy.Time.now()
+		self.path_msg.header.seq = pose_stamped.header.seq
+		pose_stamped.header.stamp = self.path_msg.header.stamp
+		self.path_msg.poses.append(pose_stamped)
+		self.pub_path.publish(self.path_msg)
+		print 'poses------------'
+		print self.path_msg.poses
+		print '------------'
 
 
 	def onShutdown(self):

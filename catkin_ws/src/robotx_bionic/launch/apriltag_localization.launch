@@ -4,6 +4,7 @@
   <arg name="camera_frame" default="camera" />
   <arg name="image_topic" default="image_rect_color" />
   <arg name="system_number" default="1"/>
+  <arg name="verbose" default="false" doc="visualization"/>
   <arg name="veh"/>
   
   <!-- Apriltag detection -->
@@ -18,6 +19,7 @@
   <include file="$(find apriltag_detection_mapping)/launch/mocap_localization_node.launch">
       <arg name="veh" value="$(arg veh)"/>
       <arg name="system_number" value="$(arg system_number)"/>
+      <arg name="verbose" value="$(arg verbose)"/>
   </include>
 </group>    
 </launch>
