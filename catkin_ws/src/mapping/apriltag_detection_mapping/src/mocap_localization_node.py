@@ -7,7 +7,7 @@ from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
 from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped
 from nav_msgs.msg import Odometry, Path
-from tf.transformations import quaternion_from_euler
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 
 class MocapLocalizationNode(object):
@@ -24,7 +24,7 @@ class MocapLocalizationNode(object):
         self.base_tag_id_group = [[504, 505, 506, 507],[508, 509, 510, 511]]
         self.base_tag_id = self.base_tag_id_group[self.system_number-1]
         # vehicle tag id    
-        self.vehicle_tag_id = [501, 502, 503]
+        self.vehicle_tag_id = [521, 502, 523]
 
         # base tag groundtruth point
         self.base_tag_point = np.array([[0, 0, 0], [20, 0, 0], [0, 20, 0], [20, 20, 0]], dtype='f')
@@ -35,7 +35,7 @@ class MocapLocalizationNode(object):
 
         # shift bwtween tag and center of wamv
         self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0]], dtype='f')
-
+        self.shift_phi = np.array([0, math.pi, 0], dtype='f')
         # legal or illegal localization
         self.base_tag_detect_count = 0
         self.vehicle_tag_detect_count = 0
@@ -58,6 +58,7 @@ class MocapLocalizationNode(object):
         # assign base tag coordination
         self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f') 
         self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
+        self.vehicle_theta = np.zeros((3, 1), dtype='f')
         self.obser_tag_point = np.zeros((4, 3), dtype='f')
         self.test_tag_point = np.zeros((4, 4), dtype='f')
 
@@ -83,9 +84,15 @@ class MocapLocalizationNode(object):
                     self.vehicle_tag_point_pair[index, 0] = tag_detection.pose.pose.pose.position.z
                     self.vehicle_tag_point_pair[index, 1] = tag_detection.pose.pose.pose.position.x               
                     self.vehicle_tag_point_pair[index, 2] = tag_detection.pose.pose.pose.position.y
-                    self.vehicle_tag_point_pair[index, 3] = 1 
+                    self.vehicle_tag_point_pair[index, 3] = 1
+                    a = tag_detection.pose.pose.pose.orientation
+                    n = euler_from_quaternion([a.x, a.y, a.z, a.w]) 
+                    print 'tag_id: ', tag_id, n 
+                    self.vehicle_theta[index, 0] = n[1]
                     self.vehicle_tag_detect_count += 1 
 
+        print self.vehicle_theta
+        print self.shift_phi
         # check enough tags detected
         if(self.verbose): print 'system: ', self.system_number
         if(self.verbose): print 'base tag count:',self.base_tag_detect_count 
@@ -96,6 +103,16 @@ class MocapLocalizationNode(object):
             if(self.verbose): print 'non enough tags detectecd'
             rospy.loginfo("non enough tags detectecd")
             return
+
+        print self.shift_center[1,0], self.shift_phi[1], self.vehicle_theta[1,0]
+        dx = (-1 * self.shift_center[1,0] * math.cos(self.shift_phi[1]+self.vehicle_theta[1,0]))
+        print dx
+        dy = (1 * self.shift_center[1,0] * math.sin(self.shift_phi[1]+self.vehicle_theta[1,0]))
+        print dy
+        self.vehicle_tag_point_pair[1, 0] += dx 
+        print self.vehicle_tag_point_pair[1, 1]
+        self.vehicle_tag_point_pair[1, 1] -= dy
+
 
         # remove zero row if only three base apriltag detected
         if(self.base_tag_detect_count == 3):
@@ -146,7 +163,8 @@ class MocapLocalizationNode(object):
         for i in range(3):
             if vehicle_loalization[:,i][3] != 0:
                 for j in range(4):
-                    vehicle_loalization[:,i][j] += shift[:,i][j]
+                    #vehicle_loalization[:,i][j] += shift[:,i][j]
+                    vehicle_loalization[:,i][j] = vehicle_loalization[:,i][j] 
         if(self.verbose): print "after shift"
         if(self.verbose): print vehicle_loalization
         vehicle_loalization = vehicle_loalization.sum(axis=1)/self.vehicle_tag_detect_count
@@ -159,8 +177,9 @@ class MocapLocalizationNode(object):
         vehicle_pose = Pose()
         #vehicle_pose.position.x = vehicle_loalization[0] + self.shift_x
         #vehicle_pose.position.y = vehicle_loalization[1] + self.shift_y
-        vehicle_pose.position.x = vehicle_loalization[0]
+
         vehicle_pose.position.y = vehicle_loalization[1] 
+        vehicle_pose.position.x = vehicle_loalization[0] 
         vehicle_pose.position.z = vehicle_loalization[2]
 
         # publish odometry
