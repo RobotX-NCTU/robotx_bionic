@@ -1,0 +1,35 @@
+<launch>
+  <!-- Parameters for apriltag2 ros continuous node-->
+  <arg name="camera_frame" default="camera" />
+  <arg name="image_topic" default="image_rect_color" />
+  <arg name="veh"/>
+  <arg name="watchtower_down" default="watchtower_down" />
+  <arg name="watchtower_left" default="watchtower_left" />
+  <arg name="verbose" default="false" doc="visualization"/>
+
+<group ns="$(arg watchtower_down)">
+  <include file="$(find robotx_bionic)/launch/apriltag_localization.launch">
+      <arg name="veh" value="$(arg veh)"/>
+      <arg name="camera_name" value="/$(arg watchtower_down)/zed_mid/rgb"/>
+      <arg name="camera_frame" value="$(arg camera_frame)"/>
+      <arg name="image_topic" value="$(arg image_topic)"/>
+      <arg name="verbose" value="$(arg verbose)"/>
+      <arg name="system_number" value="2"/>
+  </include>
+</group>
+
+<group ns="$(arg watchtower_left)">
+  <include file="$(find robotx_bionic)/launch/apriltag_localization.launch">
+      <arg name="veh" value="$(arg veh)"/>
+      <arg name="camera_name" value="/$(arg watchtower_left)/zed_mid/rgb"/>
+      <arg name="camera_frame" value="$(arg camera_frame)"/>
+      <arg name="image_topic" value="$(arg image_topic)"/>
+      <arg name="verbose" value="$(arg verbose)"/>
+      <arg name="system_number" value="1"/>
+  </include>
+</group>
+
+  <include file="$(find path_mapping)/launch/path_mapping.launch">
+  </include>
+
+</launch>

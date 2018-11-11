@@ -50,7 +50,7 @@ class MocapLocalizationNode(object):
         # Subscribers
         self.sub_tag_detections = rospy.Subscriber("~tag_detections", AprilTagDetectionArray, self.processTagDetections, queue_size=1)
         # Publishers
-        self.pub_vehicle_pose = rospy.Publisher("~vehicle_pose", PoseStamped, queue_size=1)
+        self.pub_vehicle_pose = rospy.Publisher("~als_posestamped", PoseStamped, queue_size=1)
         # self.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
         # self.pub_path = rospy.Publisher('~tag_localization_path', Path, queue_size = 20)
 
