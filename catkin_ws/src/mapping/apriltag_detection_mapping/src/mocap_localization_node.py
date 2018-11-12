@@ -87,12 +87,16 @@ class MocapLocalizationNode(object):
                     self.vehicle_tag_point_pair[index, 3] = 1
                     a = tag_detection.pose.pose.pose.orientation
                     n = euler_from_quaternion([a.x, a.y, a.z, a.w]) 
-                    print 'tag_id: ', tag_id, n 
+                    if(self.verbose): print '============================='
+                    if(self.verbose): print tag_id,'yaw:', a.z/3.14159*360
+                    if(self.verbose): print '============================='
+                    self.shift_phi[1] = a.z
+                    #print 'tag_id: ', tag_id, n 
                     self.vehicle_theta[index, 0] = n[1]
                     self.vehicle_tag_detect_count += 1 
 
-        print self.vehicle_theta
-        print self.shift_phi
+        if(self.verbose): print self.vehicle_theta
+        if(self.verbose): print self.shift_phi
         # check enough tags detected
         if(self.verbose): print 'system: ', self.system_number
         if(self.verbose): print 'base tag count:',self.base_tag_detect_count 
@@ -104,13 +108,13 @@ class MocapLocalizationNode(object):
             rospy.loginfo("non enough tags detectecd")
             return
 
-        print self.shift_center[1,0], self.shift_phi[1], self.vehicle_theta[1,0]
+        if(self.verbose): print self.shift_center[1,0], self.shift_phi[1], self.vehicle_theta[1,0]
         dx = (-1 * self.shift_center[1,0] * math.cos(self.shift_phi[1]+self.vehicle_theta[1,0]))
-        print dx
+        if(self.verbose): print dx
         dy = (1 * self.shift_center[1,0] * math.sin(self.shift_phi[1]+self.vehicle_theta[1,0]))
-        print dy
+        if(self.verbose): print dy
         self.vehicle_tag_point_pair[1, 0] += dx 
-        print self.vehicle_tag_point_pair[1, 1]
+        if(self.verbose): print self.vehicle_tag_point_pair[1, 1]
         self.vehicle_tag_point_pair[1, 1] -= dy
 
 
@@ -203,40 +207,40 @@ class MocapLocalizationNode(object):
         pose_stamped_msg.pose = p
 
         self.pub_vehicle_pose.publish(pose_stamped_msg)
-        print 'pose'
-        print pose_stamped_msg.pose
-        print '------------'
+        if(self.verbose): print 'pose'
+        if(self.verbose): print pose_stamped_msg.pose
+        if(self.verbose): print '------------'
 
-    def cb_path(self, p):
-        pose_stamped = PoseStamped()
+    #def cb_path(self, p):
+    #    pose_stamped = PoseStamped()
 
         #self.path_msg.header.stamp = rospy.Time.now()
         #self.path_msg.header.seq = pose_stamped.header.seq
         #pose_stamped.header.stamp = self.path_msg.header.stamp
-        pose_stamped.header = self.header
-        pose_stamped.header.frame_id = "odom"
+    #    pose_stamped.header = self.header
+    #    pose_stamped.header.frame_id = "odom"
 
-        pose_stamped.pose = p
+    #    pose_stamped.pose = p
 
-        self.path_msg.poses.append(pose_stamped)
-        #self.pub_path.publish(self.path_msg)
-        print 'poses------------'
-        print self.path_msg.poses
-        print '------------'
+    #    self.path_msg.poses.append(pose_stamped)
+    #    #self.pub_path.publish(self.path_msg)
+    #    print 'poses------------'
+    #    print self.path_msg.poses
+    #    print '------------'
 
 
-    def cb_odom(self, point):
-        odom_msg = Odometry() 
+    #def cb_odom(self, point):
+    #    odom_msg = Odometry() 
 
-        odom_msg.header = self.header
-        # reassign frame_id
-        odom_msg.header.frame_id = "odom"
-        #odom_msg.header.stamp = rospy.Time.now()
+    #    odom_msg.header = self.header
+    #    # reassign frame_id
+    #    odom_msg.header.frame_id = "odom"
+    #    #odom_msg.header.stamp = rospy.Time.now()
 
-        odom_msg.pose.pose.position = point
-        #odom_msg.pose.pose.orientation = self.get_orientation(point)
-        print "odem", odom_msg.pose.pose
-        #self.pub_odom.publish(odom_msg)
+    #    odom_msg.pose.pose.position = point
+    #    #odom_msg.pose.pose.orientation = self.get_orientation(point)
+    #    print "odem", odom_msg.pose.pose
+    #    #self.pub_odom.publish(odom_msg)
 
     def get_orientation(self, point):
         dx = point.x - self.pre_vehicle_loalization.x
