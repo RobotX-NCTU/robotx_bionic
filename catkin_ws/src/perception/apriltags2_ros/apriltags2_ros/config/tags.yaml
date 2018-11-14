@@ -32,6 +32,7 @@ standalone_tags:
      {id: 509, size: 0.70, name: tag_x0_2},
      {id: 510, size: 0.70, name: tag_y0_2},
      {id: 511, size: 0.70, name: tag_xy0_2},
+     {id: 512, size: 0.70, name: WAM-V_front},
   ]
 # ## Tag bundle definitions
 # ### Remarks

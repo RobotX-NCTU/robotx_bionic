@@ -24,7 +24,7 @@ class MocapLocalizationNode(object):
         self.base_tag_id_group = [[504, 505, 506, 507],[508, 509, 510, 511]]
         self.base_tag_id = self.base_tag_id_group[self.system_number-1]
         # vehicle tag id    
-        self.vehicle_tag_id = [521, 502, 523]
+        self.vehicle_tag_id = [521, 502, 523, 522] # left, back, right, front
 
         # base tag groundtruth point
         self.base_tag_point = np.array([[0, 0, 0], [20, 0, 0], [0, 20, 0], [20, 20, 0]], dtype='f')
@@ -34,7 +34,7 @@ class MocapLocalizationNode(object):
         #self.shift_y = -5 + 0.25
 
         # shift bwtween tag and center of wamv
-        self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0]], dtype='f')
+        self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0], [-1.1, 0.0, -0.9, 0]], dtype='f')
         self.shift_phi = np.array([0, math.pi, 0], dtype='f')
         # legal or illegal localization
         self.base_tag_detect_count = 0
@@ -57,8 +57,8 @@ class MocapLocalizationNode(object):
     def processTagDetections(self,tag_detections_msg):
         # assign base tag coordination
         self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f') 
-        self.vehicle_tag_point_pair = np.zeros((3, 4), dtype='f')
-        self.vehicle_theta = np.zeros((3, 1), dtype='f')
+        self.vehicle_tag_point_pair = np.zeros((4, 4), dtype='f')
+        self.vehicle_theta = np.zeros((4, 1), dtype='f')
         self.obser_tag_point = np.zeros((4, 3), dtype='f')
         self.test_tag_point = np.zeros((4, 4), dtype='f')
 
@@ -66,7 +66,7 @@ class MocapLocalizationNode(object):
         self.header = tag_detections_msg.header
 
         for tag_detection in tag_detections_msg.detections:
-            if(self.verbose): print tag_detection.id[0]
+            if(self.verbose == False): print tag_detection.id[0]
         	# extract base tag detection
             for index, tag_id in enumerate(self.base_tag_id):
                 if tag_detection.id[0] == tag_id:
@@ -87,12 +87,13 @@ class MocapLocalizationNode(object):
                     self.vehicle_tag_point_pair[index, 3] = 1
                     a = tag_detection.pose.pose.pose.orientation
                     n = euler_from_quaternion([a.x, a.y, a.z, a.w]) 
-                    if(self.verbose): print '============================='
-                    if(self.verbose): print tag_id,'yaw:', a.z/3.14159*360
-                    if(self.verbose): print '============================='
-                    self.shift_phi[1] = a.z
+                    if(self.verbose == False): print '============================='
+                    if(self.verbose == False): print tag_id,'yaw:', n[2]/3.14159*360, n[2]
+                    if(self.verbose == False): print '============================='
+                    #self.shift_phi[1] = n[2]
                     #print 'tag_id: ', tag_id, n 
-                    self.vehicle_theta[index, 0] = n[1]
+                    print n
+                    self.vehicle_theta[index, 0] = n[2]
                     self.vehicle_tag_detect_count += 1 
 
         if(self.verbose): print self.vehicle_theta
