@@ -2,7 +2,7 @@
 	<arg name="veh"/>
 	<arg name="pkg_name" default="path_mapping" doc="name of the package"/>
 
-	<remap from="/wamv_path/als_posestamped" to="/watchtower_down/wamv/mocap_localization_node/als_posestamped"/>
+	<remap from="/wamv_path/als_posestamped" to="/watchtower_left/wamv/mocap_localization_node/als_posestamped"/>
 	<remap from="/wamv_path/gps_posestamped" to="/gps/gps_posestamped"/>
 	<remap from="/wamv_path/ground_truth_posestamped" to="/groundtruth/ground_truth_posestamped"/>
 

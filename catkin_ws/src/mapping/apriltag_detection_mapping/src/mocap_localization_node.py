@@ -33,6 +33,9 @@ class MocapLocalizationNode(object):
         #self.shift_x = 5 - 0.25
         #self.shift_y = -5 + 0.25
 
+        self.get_mapping_matrix = False
+        self.T = []
+
         # shift bwtween tag and center of wamv
         self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0], [-1.1, 0.0, -0.9, 0]], dtype='f')
         self.shift_phi = np.array([0, math.pi, 0], dtype='f')
@@ -88,12 +91,15 @@ class MocapLocalizationNode(object):
                     a = tag_detection.pose.pose.pose.orientation
                     n = euler_from_quaternion([a.x, a.y, a.z, a.w]) 
                     if(self.verbose == False): print '============================='
-                    if(self.verbose == False): print tag_id,'yaw:', n[2]/3.14159*360, n[2]
+                    if(self.verbose == False): print tag_id,'yaw:', n[1]/3.14159*360, n[1]
                     if(self.verbose == False): print '============================='
                     #self.shift_phi[1] = n[2]
                     #print 'tag_id: ', tag_id, n 
+                    # remove unreasonable detection
+                    if abs(n[0]) < 3 or abs(n[2]) < 0.00001:
+                        return
                     print n
-                    self.vehicle_theta[index, 0] = n[2]
+                    self.vehicle_theta[index, 0] = n[1]
                     self.vehicle_tag_detect_count += 1 
 
         if(self.verbose): print self.vehicle_theta
@@ -109,13 +115,13 @@ class MocapLocalizationNode(object):
             rospy.loginfo("non enough tags detectecd")
             return
 
+        # shift compensation
         if(self.verbose): print self.shift_center[1,0], self.shift_phi[1], self.vehicle_theta[1,0]
         dx = (-1 * self.shift_center[1,0] * math.cos(self.shift_phi[1]+self.vehicle_theta[1,0]))
         if(self.verbose): print dx
         dy = (1 * self.shift_center[1,0] * math.sin(self.shift_phi[1]+self.vehicle_theta[1,0]))
         if(self.verbose): print dy
         self.vehicle_tag_point_pair[1, 0] += dx 
-        if(self.verbose): print self.vehicle_tag_point_pair[1, 1]
         self.vehicle_tag_point_pair[1, 1] -= dy
 
 
@@ -125,51 +131,55 @@ class MocapLocalizationNode(object):
             self.base_tag_point = np.delete(self.base_tag_point, zero_row, axis=0)
             self.obser_tag_point = self.obser_tag_point[~(self.obser_tag_point==0).all(1)]
 
-        length = self.obser_tag_point.shape[0]
-        p_ct = self.base_tag_point.sum(axis=0) / length
-        p_cm = self.obser_tag_point.sum(axis=0) / length
+        if self.get_mapping_matrix == False:
+            length = self.obser_tag_point.shape[0]
+            p_ct = self.base_tag_point.sum(axis=0) / length
+            p_cm = self.obser_tag_point.sum(axis=0) / length
 
-        self.obser_tag_point = self.obser_tag_point - p_cm
-        self.base_tag_point = self.base_tag_point - p_cm
+            self.obser_tag_point = self.obser_tag_point - p_cm
+            self.base_tag_point = self.base_tag_point - p_cm
 
-        Mtd = self.base_tag_point[0]
-        Mmd = self.obser_tag_point[0]
-        for i in range(length-1):
-            Mtd = np.vstack((Mtd, self.base_tag_point[i+1]))
-            Mmd = np.vstack((Mmd, self.obser_tag_point[i+1]))
-        Mtd = Mtd.transpose()
-        Mmd = Mmd.transpose()
+            Mtd = self.base_tag_point[0]
+            Mmd = self.obser_tag_point[0]
+            for i in range(length-1):
+                Mtd = np.vstack((Mtd, self.base_tag_point[i+1]))
+                Mmd = np.vstack((Mmd, self.obser_tag_point[i+1]))
+            Mtd = Mtd.transpose()
+            Mmd = Mmd.transpose()
 
-        #p_ct = (self.base_tag_point[0] + self.base_tag_point[1] + self.base_tag_point[2])/3
-        #p_cm = (self.obser_tag_point[0] + self.obser_tag_point[1] + self.obser_tag_point[2])/3
-        #for i in range(3):
-        #    self.obser_tag_point[i] = self.obser_tag_point[i] - p_cm
-        #    self.base_tag_point[i] = self.base_tag_point[i] - p_ct
-        #Mtd = np.vstack((self.base_tag_point[0], self.base_tag_point[1], self.base_tag_point[2])).transpose()
-        #Mmd = np.vstack((self.obser_tag_point[0], self.obser_tag_point[1], self.obser_tag_point[2])).transpose()
+            #p_ct = (self.base_tag_point[0] + self.base_tag_point[1] + self.base_tag_point[2])/3
+            #p_cm = (self.obser_tag_point[0] + self.obser_tag_point[1] + self.obser_tag_point[2])/3
+            #for i in range(3):
+            #    self.obser_tag_point[i] = self.obser_tag_point[i] - p_cm
+            #    self.base_tag_point[i] = self.base_tag_point[i] - p_ct
+            #Mtd = np.vstack((self.base_tag_point[0], self.base_tag_point[1], self.base_tag_point[2])).transpose()
+            #Mmd = np.vstack((self.obser_tag_point[0], self.obser_tag_point[1], self.obser_tag_point[2])).transpose()
 
-        H = np.dot(Mmd, Mtd.transpose())
-        [U, D, V] = np.linalg.svd(H,full_matrices=1)
-        R = np.dot(V,U.transpose())
-        t = np.matrix(p_ct - np.dot(R,p_cm))
+            H = np.dot(Mmd, Mtd.transpose())
+            [U, D, V] = np.linalg.svd(H,full_matrices=1)
+            R = np.dot(V,U.transpose())
+            t = np.matrix(p_ct - np.dot(R,p_cm))
 
-        temp = np.hstack((R,t.transpose()))
-        zero = np.array([[0,0,0,1]])
-        T = np.vstack((temp,zero))
+            temp = np.hstack((R,t.transpose()))
+            zero = np.array([[0,0,0,1]])
+            T = np.vstack((temp,zero))
+            self.T = T
+            self.get_mapping_matrix =True
+
 
         if(self.verbose): print "vehicle tag detection"
         if(self.verbose): print self.vehicle_tag_point_pair.transpose()
         if(self.verbose): print "vehicle tag detection after transformation"
-        if(self.verbose): print np.dot(T,self.vehicle_tag_point_pair.transpose())
+        if(self.verbose): print np.dot(self.T,self.vehicle_tag_point_pair.transpose())
 
 
-        vehicle_loalization = np.dot(T,self.vehicle_tag_point_pair.transpose())
+        vehicle_loalization = np.dot(self.T,self.vehicle_tag_point_pair.transpose())
         shift = self.shift_center.transpose()
-        for i in range(3):
-            if vehicle_loalization[:,i][3] != 0:
-                for j in range(4):
-                    #vehicle_loalization[:,i][j] += shift[:,i][j]
-                    vehicle_loalization[:,i][j] = vehicle_loalization[:,i][j] 
+        #for i in range(3):
+        #    if vehicle_loalization[:,i][3] != 0:
+        #        for j in range(4):
+        #            vehicle_loalization[:,i][j] += shift[:,i][j]
+        #            vehicle_loalization[:,i][j] = vehicle_loalization[:,i][j] 
         if(self.verbose): print "after shift"
         if(self.verbose): print vehicle_loalization
         vehicle_loalization = vehicle_loalization.sum(axis=1)/self.vehicle_tag_detect_count
@@ -180,11 +190,8 @@ class MocapLocalizationNode(object):
         self.vehicle_tag_detect_count = 0
 
         vehicle_pose = Pose()
-        #vehicle_pose.position.x = vehicle_loalization[0] + self.shift_x
-        #vehicle_pose.position.y = vehicle_loalization[1] + self.shift_y
-
-        vehicle_pose.position.y = vehicle_loalization[1] 
         vehicle_pose.position.x = vehicle_loalization[0] 
+        vehicle_pose.position.y = vehicle_loalization[1] 
         vehicle_pose.position.z = vehicle_loalization[2]
 
         # publish odometry
@@ -192,7 +199,7 @@ class MocapLocalizationNode(object):
 
         # publish path
         # self.cb_path(vehicle_pose)
-
+        print self.T
         # publish posestamped
         self.cb_pose_stam(vehicle_pose)
 
