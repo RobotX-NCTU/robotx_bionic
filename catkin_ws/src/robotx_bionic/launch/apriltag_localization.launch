@@ -5,6 +5,7 @@
   <arg name="image_topic" default="image_rect_color" />
   <arg name="system_number" default="1"/>
   <arg name="verbose" default="false" doc="visualization"/>
+  <arg name="simulation" default="true" doc="simulation of real-world"/>
   <arg name="veh"/>
   
   <!-- Apriltag detection -->
@@ -20,6 +21,7 @@
       <arg name="veh" value="$(arg veh)"/>
       <arg name="system_number" value="$(arg system_number)"/>
       <arg name="verbose" value="$(arg verbose)"/>
+      <arg name="simulation" value="$(arg simulation)"/>      
   </include>
 </group>    
 </launch>

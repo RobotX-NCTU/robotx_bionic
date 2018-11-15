@@ -49,9 +49,9 @@ class WAMVPath(object):
 
 
         # Subscribers
-        self.sub_ground_truth = rospy.Subscriber("~ground_truth_posestamped", PoseStamped, self.cbBaseLine, queue_size=1)
-        self.sub_als = rospy.Subscriber("~als_posestamped", PoseStamped, self.cbALS, queue_size=1)
-        self.sub_gps = rospy.Subscriber("~gps_posestamped", PoseStamped, self.cbGPS, queue_size=1)
+        self.sub_ground_truth = rospy.Subscriber("~ground_truth_posestamped", PoseStamped, self.cbBaseLine, queue_size=10)
+        self.sub_als = rospy.Subscriber("~als_posestamped", PoseStamped, self.cbALS, queue_size=10)
+        self.sub_gps = rospy.Subscriber("~gps_posestamped", PoseStamped, self.cbGPS, queue_size=10)
         self.channel = rospy.Subscriber("~channel", Int32, self.cbchannel, queue_size=1)
 
         # Publishers
