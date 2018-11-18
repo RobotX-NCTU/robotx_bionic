@@ -5,9 +5,10 @@ import scipy as sp
 import math
 from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
-from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped
+from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped, Vector3
 from nav_msgs.msg import Odometry, Path
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
+from visualization_msgs.msg import Marker, MarkerArray
 
 
 class MocapLocalizationNode(object):
@@ -55,6 +56,23 @@ class MocapLocalizationNode(object):
         self.pre_vehicle_loalization = Point()
         self.count = 0
 
+        # apriltag cube marker
+        self.apriltag_cube_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [0, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
+        self.marker_array = MarkerArray()
+
+        self.marker = Marker()
+        self.marker.header.frame_id = 'odom'
+        self.marker.id = 0
+        self.marker.type = Marker.CUBE
+        self.marker.action = Marker.ADD
+        self.marker.scale.x = 1
+        self.marker.scale.y = 1
+        self.marker.scale.z = 1
+        self.marker.color.r = 1
+        self.marker.color.g = 1
+        self.marker.color.b = 1
+        self.marker.color.a = 0.5
+
         # apriltag localization path
         self.path_msg = Path()
         self.path_msg.header.frame_id = "odom"
@@ -64,6 +82,7 @@ class MocapLocalizationNode(object):
         
         # Publishers
         self.pub_vehicle_pose = rospy.Publisher("~als_posestamped", PoseStamped, queue_size=10)
+        self.pub_visual_apriltag_wp = rospy.Publisher("~apriltag_cube_waypoint", MarkerArray, queue_size=20)
         # self.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
         # self.pub_path = rospy.Publisher('~tag_localization_path', Path, queue_size = 20)
 
@@ -72,9 +91,15 @@ class MocapLocalizationNode(object):
         # for gazebo
         #self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
         # for bamboolake 20181116 
-        self.base_tag_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [0, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
+        self.base_tag_point = self.apriltag_cube_point
         # for bamboolake 20181117
         #self.base_tag_point = np.array([[0, 0, 0.7], [10.59, 0, 0.7], [0, 12.55, 0.7], [16.45, 13.934, 0.7]], dtype='f')
+
+        for p in self.base_tag_point:
+            self.marker.pose.position = Vector3(p[0], p[1], p[2])
+            self.marker.id += 1
+            self.marker_array.markers.append(self.marker)
+            self.pub_visual_apriltag_wp.publish(self.marker_array)
 
         self.vehicle_tag_point_pair = np.zeros((4, 4), dtype='f')
         self.vehicle_theta = np.zeros((4, 1), dtype='f')
