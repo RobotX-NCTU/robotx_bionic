@@ -39,6 +39,7 @@
   </group>
 
   <include file="$(find path_mapping)/launch/path_mapping.launch">
+    <arg name="simulation" value="$(arg simulation)"/> 
   </include>
 
 </launch>

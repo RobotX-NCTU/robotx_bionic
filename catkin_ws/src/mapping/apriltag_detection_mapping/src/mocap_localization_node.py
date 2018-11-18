@@ -26,16 +26,16 @@ class MocapLocalizationNode(object):
             self.base_tag_id_group = [[504, 505, 506, 507],[508, 509, 510, 511]]
             self.base_tag_id = self.base_tag_id_group[self.system_number-1]
         else:
-            self.base_tag_id_group = [[506, 507, 505, 504],[508, 509, 510, 511]]
+            self.base_tag_id_group = [[505, 507, 504, 506],[508, 509, 510, 511]]
             self.base_tag_id = self.base_tag_id_group[self.system_number-1]
         # vehicle tag id    
         self.vehicle_tag_id = [501, 502, 503, 512] # left, back, right, front
 
         # base tag groundtruth point
-        if self.simulation:
-            self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
-        else:
-            self.base_tag_point = np.array([[0, 0, 0.7], [10, 0, 0.7], [0, 10, 0.7], [10, 10, 0.7]], dtype='f')
+        #if self.simulation:
+        #    self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
+        #else:
+        #    self.base_tag_point = np.array([[0, 0, 0.7], [10, 0, 0.7], [0, 10, 0.7], [10, 10, 0.7]], dtype='f')
 
         # for fix mapping matric
         self.get_mapping_matrix = False
@@ -69,8 +69,13 @@ class MocapLocalizationNode(object):
 
     def processTagDetections(self,tag_detections_msg):
         # assign base tag coordination
-        #self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f') 
-        self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
+        # for gazebo
+        #self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
+        # for bamboolake 20181116 
+        self.base_tag_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [0, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
+        # for bamboolake 20181117
+        #self.base_tag_point = np.array([[0, 0, 0.7], [10.59, 0, 0.7], [0, 12.55, 0.7], [16.45, 13.934, 0.7]], dtype='f')
+
         self.vehicle_tag_point_pair = np.zeros((4, 4), dtype='f')
         self.vehicle_theta = np.zeros((4, 1), dtype='f')
         self.vehicle_check = np.zeros((4, 1), dtype='f')
@@ -81,7 +86,6 @@ class MocapLocalizationNode(object):
         self.header = tag_detections_msg.header
 
         for tag_detection in tag_detections_msg.detections:
-            #print tag_detection.id[0]
             #if(self.verbose == False): print tag_detection.id[0]
             # extract base tag detection
             for index, tag_id in enumerate(self.base_tag_id):
@@ -89,31 +93,29 @@ class MocapLocalizationNode(object):
                     self.obser_tag_point[index, 0] = tag_detection.pose.pose.pose.position.z
                     self.obser_tag_point[index, 1] = tag_detection.pose.pose.pose.position.x                   
                     self.obser_tag_point[index, 2] = tag_detection.pose.pose.pose.position.y
-                    #self.obser_tag_point[index, 2] = 0
                     self.test_tag_point[index, 0] = tag_detection.pose.pose.pose.position.z
                     self.test_tag_point[index, 1] =  tag_detection.pose.pose.pose.position.x                  
-                    #self.test_tag_point[index, 2] = 0
                     self.test_tag_point[index, 2] = tag_detection.pose.pose.pose.position.y
                     self.test_tag_point[index, 3] = 1
                     self.base_tag_detect_count += 1
             # extract vehicle tag detection
             for index, tag_id in enumerate(self.vehicle_tag_id):
                 if tag_detection.id[0] == tag_id:
-
                     a = tag_detection.pose.pose.pose.orientation
                     n = euler_from_quaternion([a.x, a.y, a.z, a.w]) 
                     #if(self.verbose == False): print '============================='
                     #if(self.verbose == False): print tag_id,'yaw:', n[1]/3.14159*360, n[1]
                     #if(self.verbose == False): print '============================='
-                    #self.shift_phi[1] = n[2]
-                    #print 'tag_id: ', tag_id, n 
+                    if(self.verbose): print 'tag_id: ', tag_id, n 
+
                     # remove unreasonable detection
                     #if abs(n[0]) < 3 or abs(n[2]) < 0.00001:
-                    if abs(n[0]) < 3.05 :
                     #if abs(n[0]) < 3.05 :
-                        break
+                    #if abs(n[0]) < 3.05 :
+                        #break
                         #return
-                    print tag_id, n
+                    #print tag_id, n
+
                     self.vehicle_theta[index, 0] = n[1]
                     self.vehicle_check[index, 0] = abs(n[1])
 
@@ -124,6 +126,7 @@ class MocapLocalizationNode(object):
 
                     self.vehicle_tag_detect_count += 1 
 
+        # check whether two pitch of adjacent tag detections are half of pi
         if self.vehicle_tag_detect_count == 2:
             theta_sum = self.vehicle_check.sum(axis=0)
             print "sum of theta: ", theta_sum
@@ -132,7 +135,7 @@ class MocapLocalizationNode(object):
                 self.base_tag_detect_count = 0
                 self.vehicle_tag_detect_count = 0
                 return
-
+        # check whether pitch variance of same tag detection is too sharp
         for i in range(4):
             if((self.vehicle_theta[i, 0] * self.vehicle_theta_pre[i, 0]) < -0.4):
                 print "too large varing yaw"
@@ -145,9 +148,9 @@ class MocapLocalizationNode(object):
         for j in range(4):
             a = self.vehicle_theta[i, 0]
             self.vehicle_theta_pre[i, 0] = a
-
         if(self.verbose): print self.vehicle_theta
         if(self.verbose): print self.shift_phi
+
         # check enough tags detected
         if(self.verbose): print 'system: ', self.system_number
         if(self.verbose): print 'base tag count:',self.base_tag_detect_count 
@@ -158,41 +161,23 @@ class MocapLocalizationNode(object):
             if(self.verbose): print 'non enough tags detectecd'
             rospy.loginfo("non enough tags detectecd")
             return
-        #print "vehicle tag detection"
-        #print self.vehicle_tag_point_pair.transpose()
+
         # shift compensation
         for i in range(4):
-            #print 'aa', self.vehicle_tag_point_pair[i, 0]
             if self.vehicle_tag_point_pair[i,2] != 0:
                 dx = (-1 * abs(self.shift_center[i,0]) * math.cos(math.pi+self.vehicle_theta[i,0]))
                 dy = (1 * abs(self.shift_center[i,0]) * math.sin(math.pi+self.vehicle_theta[i,0]))
-                #print i
-                #if(self.verbose): print self.shift_center[i,0], self.shift_phi[i], self.vehicle_theta[i,0]
-                #if i == 0:
-                #    dx = (1 * self.shift_center[i,0] * math.sin(self.shift_phi[i]+self.vehicle_theta[i,0]))
-                #    dy = (1 * self.shift_center[i,0] * math.cos(-self.shift_phi[i]-self.vehicle_theta[i,0]))
-                #if i == 1 or i == 2:
-                #    dx = (-1 * self.shift_center[i,0] * math.cos(self.shift_phi[i]+self.vehicle_theta[i,0]))
-                #    dy = (1 * self.shift_center[i,0] * math.sin(self.shift_phi[i]+self.vehicle_theta[i,0]))
-                #if(self.verbose): print dx
-                #if(self.verbose): print dy
-                #print dx, dy
+                if(self.verbose): print dx
+                if(self.verbose): print dy
                 self.vehicle_tag_point_pair[i, 0] += dx 
                 self.vehicle_tag_point_pair[i, 1] -= dy        
-        #if(self.verbose): print self.shift_center[1,0], self.shift_phi[1], self.vehicle_theta[1,0]
-        #dx = (-1 * self.shift_center[1,0] * math.cos(self.shift_phi[1]+self.vehicle_theta[1,0]))
-        #if(self.verbose): print dx
-        #dy = (1 * self.shift_center[1,0] * math.sin(self.shift_phi[1]+self.vehicle_theta[1,0]))
-        #if(self.verbose): print dy
-        #self.vehicle_tag_point_pair[1, 0] += dx 
-        #self.vehicle_tag_point_pair[1, 1] -= dy
-        #print self.vehicle_tag_point_pair.transpose()
 
         # remove zero row if only three base apriltag detected
         if(self.base_tag_detect_count == 3):
             zero_row = np.where(~self.obser_tag_point.any(axis=1))[0][0]
             self.base_tag_point = np.delete(self.base_tag_point, zero_row, axis=0)
             self.obser_tag_point = self.obser_tag_point[~(self.obser_tag_point==0).all(1)]
+
         #if True:
         if self.get_mapping_matrix == False:
             length = self.obser_tag_point.shape[0]
@@ -251,7 +236,7 @@ class MocapLocalizationNode(object):
         if(self.verbose): print vehicle_loalization
         vehicle_loalization = vehicle_loalization.sum(axis=1)/self.vehicle_tag_detect_count
         #vehicle_loalization[2] = 0
-        if(self.verbose): print "average", vehicle_loalization
+        # "average", vehicle_loalization
 
         self.base_tag_detect_count = 0
         self.vehicle_tag_detect_count = 0
@@ -260,7 +245,7 @@ class MocapLocalizationNode(object):
         vehicle_pose.position.x = vehicle_loalization[0] 
         vehicle_pose.position.y = vehicle_loalization[1] 
         vehicle_pose.position.z = vehicle_loalization[2]
-        #print vehicle_pose.position.x, vehicle_pose.position.y, vehicle_pose.position.z
+        print vehicle_pose.position.x, vehicle_pose.position.y, vehicle_pose.position.z
         #print "average", vehicle_loalization
         # publish odometry
         #self.cb_odom(vehicle_pose.position)

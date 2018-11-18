@@ -11,7 +11,9 @@ class GPS(object):
     def __init__(self):
         self.node_name = rospy.get_name()
 
-        self.verbose=False
+        self.verbose = False
+
+        self.simulation = rospy.get_param("~simulation", True)
 
         self.first = True
         self.first_latitude = 0
@@ -19,8 +21,10 @@ class GPS(object):
         self.first_altitude = 0
 
         # Subscribers
-        self.sub_gps = rospy.Subscriber("/gps", NavSatFix, self.cbGPS, queue_size=1)
-
+        if self.simulation:
+            self.sub_gps = rospy.Subscriber("/gps", NavSatFix, self.cbGPS, queue_size=1)
+        else:
+            self.sub_gps = rospy.Subscriber("/fix", NavSatFix, self.cbGPS, queue_size=1)
         # Publishers
         self.pub_gps = rospy.Publisher('~gps_posestamped', PoseStamped, queue_size = 20)
 
