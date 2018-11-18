@@ -5,6 +5,7 @@ import scipy as sp
 import math
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import NavSatFix
+from nav_msgs.msg import Odometry
 
 
 class GPS(object):
@@ -24,7 +25,8 @@ class GPS(object):
         if self.simulation:
             self.sub_gps = rospy.Subscriber("/gps", NavSatFix, self.cbGPS, queue_size=1)
         else:
-            self.sub_gps = rospy.Subscriber("/fix", NavSatFix, self.cbGPS, queue_size=1)
+            #self.sub_gps = rospy.Subscriber("/fix", NavSatFix, self.cbGPS, queue_size=1)
+            self.sub_odom = rospy.Subscriber("/odometry/filtered", Odometry, self.cbodom, queue_size=1)
         # Publishers
         self.pub_gps = rospy.Publisher('~gps_posestamped', PoseStamped, queue_size = 20)
 
@@ -36,14 +38,26 @@ class GPS(object):
             #self.first_altitude = navsatfix.altitude
         pose_stamped = PoseStamped()
         pose_stamped.header = navsatfix.header
-        pose_stamped.pose.position.x = navsatfix.longitude - self.first_longitude
-        pose_stamped.pose.position.y = navsatfix.latitude - self.first_latitude
+        if(self.simulation == True):
+            pose_stamped.pose.position.x = navsatfix.longitude - self.first_longitude
+            pose_stamped.pose.position.y = navsatfix.latitude - self.first_latitude
+        else:
+            pose_stamped.pose.position.x = navsatfix.longitude
+            pose_stamped.pose.position.y = navsatfix.latitude   
         #pose_stamped.pose.position.z = navsatfix.altitude - self.first_altitude
         pose_stamped.pose.position.x = pose_stamped.pose.position.x * 100000
         pose_stamped.pose.position.y = pose_stamped.pose.position.y * 100000
         pose_stamped.pose.position.z = 0
+        print pose_stamped.pose.position.x, pose_stamped.pose.position.y
         self.pub_gps.publish(pose_stamped)
         if(self.verbose): print pose_stamped.pose
+
+    def cbodom(self, odom):
+        pose_stamped = PoseStamped()
+        pose_stamped.header = odom.header
+        pose_stamped.pose = odom.pose.pose
+        print pose_stamped.pose.position.x, pose_stamped.pose.position.y
+        self.pub_gps.publish(pose_stamped)
 
 
 #    def cbModelStates2Pose(self, model_states):

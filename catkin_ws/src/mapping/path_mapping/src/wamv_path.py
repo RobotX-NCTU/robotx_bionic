@@ -21,6 +21,8 @@ class WAMVPath(object):
         self.path_group = 5
  
         self.channel = 1
+        self.simulation = rospy.get_param("~simulation", True)
+
 
         self.write_ground_truth = dict()
         self.write_gps = dict()
@@ -76,11 +78,11 @@ class WAMVPath(object):
         self.sub_ground_truth = rospy.Subscriber("~ground_truth_posestamped", PoseStamped, self.cbBaseLine, queue_size=10)
         self.sub_als = rospy.Subscriber("~als_posestamped", PoseStamped, self.cbALS, queue_size=10)
         self.sub_gps = rospy.Subscriber("~gps_posestamped", PoseStamped, self.cbGPS, queue_size=10)
-        self.channel = rospy.Subscriber("~channel", Int32, self.cbchannel, queue_size=1)
+        self.sub_channel = rospy.Subscriber("~channel", Int32, self.cbchannel, queue_size=1)
 
 
     def cbBaseLine(self, posestamped):
-        if(self.is_ground_truth_first == False):
+        if(self.is_ground_truth_first == False and self.simulation == True):
             if self.channel > 0 and self.channel <= self.path_group:
                 self.ground_truth_path_msg[self.channel-1].poses.append(posestamped)
                 self.pub_ground_truth[self.channel-1].publish(self.ground_truth_path_msg[self.channel-1])
@@ -92,7 +94,7 @@ class WAMVPath(object):
                 to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
                 self.write_ground_truth[self.channel-1].write(to_write) 
 
-        else:
+        elif(self.is_ground_truth_first == True and self.simulation == True):
             self.is_ground_truth_first = False
             self.ground_truth_first = posestamped.pose
             data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
@@ -102,8 +104,20 @@ class WAMVPath(object):
             to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
             self.write_ground_truth[self.channel-1].write(to_write) 
 
+        else:
+            if self.channel > 0 and self.channel <= self.path_group:
+                self.ground_truth_path_msg[self.channel-1].poses.append(posestamped)
+                self.pub_ground_truth[self.channel-1].publish(self.ground_truth_path_msg[self.channel-1])
+
+                data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
+                x = posestamped.pose.position.x
+                y = posestamped.pose.position.y
+                z = posestamped.pose.position.z 
+                to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
+                self.write_ground_truth[self.channel-1].write(to_write) 
+
     def cbALS(self, posestamped):
-        if(self.is_als_first == False):
+        if(self.is_als_first == False and self.simulation == True):
             posestamped.pose.position.x = posestamped.pose.position.x - self.als_first.position.x + self.ground_truth_first.position.x
             posestamped.pose.position.y = posestamped.pose.position.y - self.als_first.position.y + self.ground_truth_first.position.y
             posestamped.pose.position.z = posestamped.pose.position.z - self.als_first.position.z + self.ground_truth_first.position.z
@@ -119,7 +133,7 @@ class WAMVPath(object):
                 to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
                 self.write_als[self.channel-1].write(to_write) 
    
-        else:
+        elif(self.is_als_first == True and self.simulation == True):
             self.als_first = posestamped.pose
             self.is_als_first = False
             data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
@@ -129,8 +143,20 @@ class WAMVPath(object):
             to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
             self.write_als[self.channel-1].write(to_write) 
 
+        else:
+            if self.channel > 0 and self.channel <= self.path_group:
+                self.als_path_msg[self.channel-1].poses.append(posestamped)
+                self.pub_als[self.channel-1].publish(self.als_path_msg[self.channel-1])
+                
+                data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
+                x = posestamped.pose.position.x
+                y = posestamped.pose.position.y
+                z = posestamped.pose.position.z 
+                to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
+                self.write_als[self.channel-1].write(to_write)
+
     def cbGPS(self, posestamped):
-        if(self.is_gps_first == False):
+        if(self.is_gps_first == False and self.simulation == True):
             posestamped.pose.position.x = posestamped.pose.position.x - self.gps_first.position.x + self.ground_truth_first.position.x
             posestamped.pose.position.y = posestamped.pose.position.y - self.gps_first.position.y + self.ground_truth_first.position.y
             posestamped.pose.position.z = posestamped.pose.position.z - self.gps_first.position.z + self.ground_truth_first.position.z
@@ -145,7 +171,8 @@ class WAMVPath(object):
                 z = posestamped.pose.position.z 
                 to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
                 self.write_gps[self.channel-1].write(to_write) 
-        else:
+
+        elif(self.is_gps_first == True and self.simulation == True):
             self.gps_first = posestamped.pose
             self.is_gps_first = False
             data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
@@ -154,6 +181,18 @@ class WAMVPath(object):
             z = posestamped.pose.position.z 
             to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
             self.write_gps[self.channel-1].write(to_write) 
+
+        else:
+            if self.channel > 0 and self.channel <= self.path_group:
+                self.gps_path_msg[self.channel-1].poses.append(posestamped)
+                self.pub_gps[self.channel-1].publish(self.gps_path_msg[self.channel-1])
+                
+                data_time = datetime.datetime.fromtimestamp(posestamped.header.stamp.secs + posestamped.header.stamp.nsecs*1e-9)
+                x = posestamped.pose.position.x
+                y = posestamped.pose.position.y
+                z = posestamped.pose.position.z 
+                to_write = str(data_time) + ',' + str(x) + ',' + str(y) + ',' + str(z) + '\n'
+                self.write_gps[self.channel-1].write(to_write) 
 
     def cbchannel(self, channel_msg):
         self.channel = channel_msg.data

@@ -7,7 +7,7 @@ from apriltags2_ros.msg import AprilTagDetectionArray
 from apriltags2_ros.msg import AprilTagDetection
 from geometry_msgs.msg import PoseArray, Pose, Quaternion, Point, PoseStamped, Vector3
 from nav_msgs.msg import Odometry, Path
-from tf.transformations import quaternion_from_euler, euler_from_quaternion
+from tf.transformations import quaternion_from_euler, euler_from_quaternion, compose_matrix, rotation_matrix
 from visualization_msgs.msg import Marker, MarkerArray
 
 
@@ -42,6 +42,13 @@ class MocapLocalizationNode(object):
         self.get_mapping_matrix = False
         self.T = []
 
+        # transformation for real data
+        angles = [0, 0, -0.68 * math.pi ]
+        trans = [-7, 7, 0]
+        #print angles, trans
+        self.M0 = compose_matrix(scale=None, shear=None, angles=angles, translate=trans, perspective=None)
+        #print self.M0
+
         # shift bwtween tags and center of wamv
         #self.shift_center = np.array([[0.45, -0.5, 0, 0], [0.95, 0, 0, 0], [0.45, 0.5, 0, 0], [-1.1, 0.0, -0.9, 0]], dtype='f')
         self.shift_center = np.array([[0.5, -0.5, 0, 0], [0.95, 0, 0, 0], [0.5, 0.5, 0, 0], [1.1, 0.0, -0.9, 0]], dtype='f')
@@ -58,6 +65,21 @@ class MocapLocalizationNode(object):
 
         # apriltag cube marker
         self.apriltag_cube_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [0, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
+        print self.apriltag_cube_point
+        for i in range(4):
+
+            #print i
+            origin_point = [self.apriltag_cube_point[i][0], self.apriltag_cube_point[i][1], self.apriltag_cube_point[i][2], 1]
+            #origin_point = compose_matrix(scale=None, shear=None, angles=angles, translate=trans, perspective=None)
+            #print origin_point
+            #print self.M0
+            origin_after = self.M0.dot(origin_point)
+            #print origin_after
+            self.apriltag_cube_point[i][0] = origin_after[0]
+            self.apriltag_cube_point[i][1] = origin_after[1]
+            self.apriltag_cube_point[i][2] = origin_after[2]
+        print self.apriltag_cube_point
+
         self.marker_array = MarkerArray()
 
         self.marker = Marker()

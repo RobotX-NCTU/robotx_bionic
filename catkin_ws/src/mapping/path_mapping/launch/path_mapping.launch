@@ -14,6 +14,7 @@
     </node>
 
     <node pkg="$(arg pkg_name)" type="wamv_path.py" name="wamv_path" output="screen" clear_params="true" required="true">
+        <param name="simulation" value="$(arg simulation)"/>
     </node>
 
 </launch>
