@@ -64,21 +64,33 @@ class MocapLocalizationNode(object):
         self.count = 0
 
         # apriltag cube marker
-        self.apriltag_cube_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [0, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
-        print self.apriltag_cube_point
-        for i in range(4):
-
-            #print i
-            origin_point = [self.apriltag_cube_point[i][0], self.apriltag_cube_point[i][1], self.apriltag_cube_point[i][2], 1]
-            #origin_point = compose_matrix(scale=None, shear=None, angles=angles, translate=trans, perspective=None)
-            #print origin_point
-            #print self.M0
-            origin_after = self.M0.dot(origin_point)
-            #print origin_after
-            self.apriltag_cube_point[i][0] = origin_after[0]
-            self.apriltag_cube_point[i][1] = origin_after[1]
-            self.apriltag_cube_point[i][2] = origin_after[2]
-        print self.apriltag_cube_point
+        if self.simulation == True:
+            self.apriltag_cube_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
+        else:
+        	# for bamboolake 20181116 
+            #self.apriltag_cube_point = np.array([[0, 0, 0.7], [13.14, 0, 0.7], [750, 12.87, 0.7], [16.72, 14.62, 0.7]], dtype='f')
+            #self.apriltag_cube_point = np.array([[0, 0, 0.7], [12, 1, 0.7], [-0.75, 12.17, 0.7], [14.8, 13.02, 0.7]], dtype='f')
+            #self.apriltag_cube_point = np.array([[-0.75, -0.75, 0.7], [10, -1, 0.7], [-1.25, 11.17, 0.7], [14.8, 11.52, 0.7]], dtype='f')
+            self.apriltag_cube_point = np.array([[14, 10, 0.7], [23, 10, 0.7], [13.5, 23.5, 0.7], [29, 22, 0.7]], dtype='f')
+            #self.apriltag_cube_point = np.array([[19, 7, 0.7], [28, 5.5, 0.7], [17.5, 19.5, 0.7], [34, 18, 0.7]], dtype='f')
+            
+            self.obs_sphere_point = np.array([[-2.5, -11, 0.7], [-9, -24, 0.7], [-1.5, -21, 0.7]], dtype='f')
+            #self.obs_sphere_point = np.array([[-9, -15, 0.7], [-13, -26.5, 0.7], [-3.5, -24, 0.7]], dtype='f')
+            
+            print self.apriltag_cube_point
+            for i in range(4):
+    
+                #print i
+                origin_point = [self.apriltag_cube_point[i][0], self.apriltag_cube_point[i][1], self.apriltag_cube_point[i][2], 1]
+                #origin_point = compose_matrix(scale=None, shear=None, angles=angles, translate=trans, perspective=None)
+                #print origin_point
+                #print self.M0
+                origin_after = self.M0.dot(origin_point)
+                #print origin_after
+                self.apriltag_cube_point[i][0] = origin_after[0]
+                self.apriltag_cube_point[i][1] = origin_after[1]
+                self.apriltag_cube_point[i][2] = origin_after[2]
+            print self.apriltag_cube_point
 
         self.marker_array = MarkerArray()
 
@@ -105,6 +117,7 @@ class MocapLocalizationNode(object):
         # Publishers
         self.pub_vehicle_pose = rospy.Publisher("~als_posestamped", PoseStamped, queue_size=10)
         self.pub_visual_apriltag_wp = rospy.Publisher("~apriltag_cube_waypoint", MarkerArray, queue_size=20)
+        #self.pub_obstacle = rospy.Publisher("~obstacle", MarkerArray, queue_size=20)
         # self.pub_odom = rospy.Publisher('~tag_localization_odometry', Odometry, queue_size = 20)
         # self.pub_path = rospy.Publisher('~tag_localization_path', Path, queue_size = 20)
 
@@ -112,7 +125,6 @@ class MocapLocalizationNode(object):
         # assign base tag coordination
         # for gazebo
         #self.base_tag_point = np.array([[0, 0, 0.7], [20, 0, 0.7], [0, 20, 0.7], [20, 20, 0.7]], dtype='f')
-        # for bamboolake 20181116 
         self.base_tag_point = self.apriltag_cube_point
         # for bamboolake 20181117
         #self.base_tag_point = np.array([[0, 0, 0.7], [10.59, 0, 0.7], [0, 12.55, 0.7], [16.45, 13.934, 0.7]], dtype='f')
@@ -120,6 +132,20 @@ class MocapLocalizationNode(object):
         for p in self.base_tag_point:
             self.marker.pose.position = Vector3(p[0], p[1], p[2])
             self.marker.id += 1
+            self.marker.type = Marker.CUBE
+            self.marker.color.r = 1
+            self.marker.color.g = 1
+            self.marker.color.b = 1
+            self.marker_array.markers.append(self.marker)
+            self.pub_visual_apriltag_wp.publish(self.marker_array)
+
+        for p in self.obs_sphere_point:
+            self.marker.pose.position = Vector3(p[0], p[1], p[2])
+            self.marker.id += 1
+            self.marker.type = Marker.SPHERE
+            self.marker.color.r = 0
+            self.marker.color.g = 1
+            self.marker.color.b = 0
             self.marker_array.markers.append(self.marker)
             self.pub_visual_apriltag_wp.publish(self.marker_array)
 
@@ -200,14 +226,22 @@ class MocapLocalizationNode(object):
 
         # check enough tags detected
         if(self.verbose): print 'system: ', self.system_number
-        if(self.verbose): print 'base tag count:',self.base_tag_detect_count 
-        if(self.verbose): print 'vehicle tag count:',self.vehicle_tag_detect_count                    
-        if(self.base_tag_detect_count < 3 or self.vehicle_tag_detect_count == 0):
-            self.base_tag_detect_count = 0
-            self.vehicle_tag_detect_count = 0
-            if(self.verbose): print 'non enough tags detectecd'
-            rospy.loginfo("non enough tags detectecd")
-            return
+        print 'base tag count:',self.base_tag_detect_count 
+        print 'vehicle tag count:',self.vehicle_tag_detect_count
+        if self.get_mapping_matrix == False:                    
+            if(self.base_tag_detect_count < 3 or self.vehicle_tag_detect_count == 0):
+                self.base_tag_detect_count = 0
+                self.vehicle_tag_detect_count = 0
+                if(self.verbose): print 'non enough tags detectecd'
+                rospy.loginfo("non enough tags detectecd")
+                return
+        else:                    
+            if(self.vehicle_tag_detect_count == 0):
+                self.base_tag_detect_count = 0
+                self.vehicle_tag_detect_count = 0
+                if(self.verbose): print 'non enough tags detectecd'
+                rospy.loginfo("non enough tags detectecd")
+                return                
 
         # shift compensation
         for i in range(4):
