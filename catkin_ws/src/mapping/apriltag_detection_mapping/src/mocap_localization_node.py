@@ -74,6 +74,7 @@ class MocapLocalizationNode(object):
             self.apriltag_cube_point = np.array([[14, 10, 0.7], [23, 10, 0.7], [13.5, 23.5, 0.7], [29, 22, 0.7]], dtype='f')
             #self.apriltag_cube_point = np.array([[19, 7, 0.7], [28, 5.5, 0.7], [17.5, 19.5, 0.7], [34, 18, 0.7]], dtype='f')
             
+            #self.obs_sphere_point = []
             self.obs_sphere_point = np.array([[-2.5, -11, 0.7], [-9, -24, 0.7], [-1.5, -21, 0.7]], dtype='f')
             #self.obs_sphere_point = np.array([[-9, -15, 0.7], [-13, -26.5, 0.7], [-3.5, -24, 0.7]], dtype='f')
             

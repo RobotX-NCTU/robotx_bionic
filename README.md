@@ -54,7 +54,10 @@ start navigation
 $ rosservice call /start_waypoint_nav "{}"
 
 apriltag localization
-roslaunch robotx_bionic apriltag_localization.launch veh:=wamv camera_name:=/watchtower_down/zed_mid/rgb
+$ roslaunch robotx_bionic wamv_localization_path.launch veh:=wamv
+
+draw path
+$ rostopic pub /wamv_path/channel std_msgs/Int32 "data: 1" 
 
 ```
 
