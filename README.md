@@ -38,18 +38,18 @@ To do
 ## recording temparature and pressure 
 Connect to "sean-rv" Wi-Fi router
 ```
-$ ssh sean_devel@10.42.0.1 pwd: sean85914
-$ byobu
+laptop$ ssh sean_devel@10.42.0.1 pwd: sean85914
+rpi3$ byobu
 ```
 terminal 1:
 ```
-$ source ~/robotx_bionic/environment.sh
-$ $export ROS_MASTER_URI=http://10.42.0.1:11311/
-$ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
+rpi3$ source ~/robotx_bionic/environment.sh
+rpi3$ $export ROS_MASTER_URI=http://10.42.0.1:11311/
+rpi3$ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
 ```
 terminal 2:
 ```
-$ source ~/robotx_bionic/environment.sh
-$ export ROS_MASTER_URI=http://10.42.0.1:11311/
-$ rosbag record -a -o bamboobota_tem_press --split 1024
+rpi3$ source ~/robotx_bionic/environment.sh
+rpi3$ export ROS_MASTER_URI=http://10.42.0.1:11311/
+rpi3$ rosbag record -a -o bamboobota_tem_press --split 1024
 ```
