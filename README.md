@@ -27,10 +27,29 @@ $ roslaunch robotx_bionic apriltag_localization.launch veh:=bamboobota camera_na
 ##  environment sensors (Pi 3)
 Temparature and Pressure Sensors
 ```
-$ export ROS_MASTER_URI=http://192.168.2.102:11311/
 $ cd ~/robotx_bionic
 $ source environment.sh
 $ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
 ```
 
 ##  analysis (Laptop)
+To do
+
+## recording temparature and pressure 
+Connect to "sean-rv" Wi-Fi router
+```
+$ ssh sean_devel@10.42.0.1 pwd: sean85914
+$ byobu
+```
+terminal 1:
+```
+$ source ~/robotx_bionic/environment.sh
+$ $export ROS_MASTER_URI=http://10.42.0.1:11311/
+$ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
+```
+terminal 2:
+```
+$ source ~/robotx_bionic/environment.sh
+$ export ROS_MASTER_URI=http://10.42.0.1:11311/
+$ rosbag record -a -o bamboobota_tem_press --split 1024
+```
