@@ -70,6 +70,22 @@ $ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
 ```
 
 ##  analysis (Laptop)
+Downlowd "bamboobota_2018-10-02-10-43-35_0.bag" from https://drive.google.com/drive/u/1/folders/1BE6V8jH0n0DXCsdMW8F54HbpBhaxlbCC
+```
+laptop$ byobu
+```
+terminal 1:
+```
+laptop$ roscore
+```
+terminal 2:
+```
+laptop$ roslaunch robotx_bionic data_to_xls.launch veh:=bamboobota starting_time:=2018-10-02-10-43-00
+```
+terminal 3:
+```
+laptop$  rosbag play bamboobota_2018-10-02-10-43-35_0.bag
+```
 
 ## recording temparature and pressure 
 Connect to "sean-rv" Wi-Fi router
