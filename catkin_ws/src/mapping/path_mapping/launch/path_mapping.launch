@@ -1,0 +1,20 @@
+<launch>
+	<arg name="veh"/>
+	<arg name="pkg_name" default="path_mapping" doc="name of the package"/>
+    <arg name="simulation" default="true" doc="simulation of real-world"/>
+
+	<remap from="/wamv_path/als_posestamped" to="/watchtower_left/wamv/mocap_localization_node/als_posestamped"/>
+	<remap from="/wamv_path/gps_posestamped" to="/gps/gps_posestamped"/>
+	<remap from="/wamv_path/ground_truth_posestamped" to="/groundtruth/ground_truth_posestamped"/>
+
+    <node pkg="$(arg pkg_name)" type="gps.py" name="gps" output="screen" clear_params="true" required="true">
+        <param name="simulation" value="$(arg simulation)"/>
+    </node>
+    <node pkg="$(arg pkg_name)" type="groundtruth.py" name="groundtruth" output="screen" clear_params="true" required="true">
+    </node>
+
+    <node pkg="$(arg pkg_name)" type="wamv_path.py" name="wamv_path" output="screen" clear_params="true" required="true">
+        <param name="simulation" value="$(arg simulation)"/>
+    </node>
+
+</launch>

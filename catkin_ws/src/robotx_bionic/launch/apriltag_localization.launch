@@ -3,6 +3,9 @@
   <arg name="camera_name" default="/rgb" />
   <arg name="camera_frame" default="camera" />
   <arg name="image_topic" default="image_rect_color" />
+  <arg name="system_number" default="1"/>
+  <arg name="verbose" default="false" doc="visualization"/>
+  <arg name="simulation" default="true" doc="simulation of real-world"/>
   <arg name="veh"/>
   
   <!-- Apriltag detection -->
@@ -11,6 +14,14 @@
       <arg name="camera_name" value="$(arg camera_name)"/>
       <arg name="camera_frame" value="$(arg camera_frame)"/>
       <arg name="image_topic" value="$(arg image_topic)"/>
+  </include>
+  
+  <remap from="mocap_localization_node/tag_detections" to="tag_detections"/>
+  <include file="$(find apriltag_detection_mapping)/launch/mocap_localization_node.launch">
+      <arg name="veh" value="$(arg veh)"/>
+      <arg name="system_number" value="$(arg system_number)"/>
+      <arg name="verbose" value="$(arg verbose)"/>
+      <arg name="simulation" value="$(arg simulation)"/>      
   </include>
 </group>    
 </launch>

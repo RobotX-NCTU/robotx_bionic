@@ -21,6 +21,18 @@ standalone_tags:
   [
      {id: 0, size: 0.54, name: WAM-V_back},
      {id: 500, size: 0.54, name: WAM-V_back},
+     {id: 501, size: 0.70, name: WAM-V_left},
+     {id: 502, size: 0.70, name: WAM-V_back},
+     {id: 503, size: 0.70, name: WAM-V_right},
+     {id: 504, size: 0.70, name: tag_o0},
+     {id: 505, size: 0.70, name: tag_x0},
+     {id: 506, size: 0.70, name: tag_y0},
+     {id: 507, size: 0.70, name: tag_xy0},
+     {id: 508, size: 0.70, name: tag_o0_2},
+     {id: 509, size: 0.70, name: tag_x0_2},
+     {id: 510, size: 0.70, name: tag_y0_2},
+     {id: 511, size: 0.70, name: tag_xy0_2},
+     {id: 512, size: 0.70, name: WAM-V_front},
   ]
 # ## Tag bundle definitions
 # ### Remarks
