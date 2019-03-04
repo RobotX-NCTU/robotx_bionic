@@ -69,7 +69,7 @@ $ source environment.sh
 $ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
 ```
 
-##  analysis (Laptop)
+##  reading sensor data and saving as xls file from a rosbag (Laptop)
 Downlowd "bamboobota_2018-10-02-10-43-35_0.bag" from https://drive.google.com/drive/u/1/folders/1BE6V8jH0n0DXCsdMW8F54HbpBhaxlbCC
 ```
 laptop$ byobu
