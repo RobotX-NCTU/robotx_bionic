@@ -64,10 +64,29 @@ $ rostopic pub /wamv_path/channel std_msgs/Int32 "data: 1"
 ##  environment sensors (Pi 3)
 Temparature and Pressure Sensors
 ```
-$ export ROS_MASTER_URI=http://192.168.2.102:11311/
 $ cd ~/robotx_bionic
 $ source environment.sh
 $ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
 ```
 
 ##  analysis (Laptop)
+
+## recording temparature and pressure 
+Connect to "sean-rv" Wi-Fi router
+```
+laptop$ ssh sean_devel@10.42.0.1 pwd: sean85914
+rpi3$ byobu
+```
+terminal 1:
+```
+rpi3$ source ~/robotx_bionic/environment.sh
+rpi3$ $export ROS_MASTER_URI=http://10.42.0.1:11311/
+rpi3$ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
+```
+terminal 2:
+```
+rpi3$ source ~/robotx_bionic/environment.sh
+rpi3$ export ROS_MASTER_URI=http://10.42.0.1:11311/
+rpi3$ rosbag record -a -o bamboobota_tem_press --split 1024
+```
+
