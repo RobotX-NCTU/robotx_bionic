@@ -1,0 +1,13 @@
+<launch>
+	<arg name="veh" default="bamboobota" doc="vehicle name"/>
+	<arg name="pkg_name" default="analysis" doc="ros package name"/>
+	<arg name="node_name" default="data_to_xls_node" doc="ros node name"/>
+	<arg name="starting_time" default="2018-10-03-10-42-00" doc="the time you started recording data, format YYYY-MM-DD-HH-MM-SS"/>
+
+    <group ns="$(arg veh)">
+    <remap from="data_to_xls_node/temp_press" to="temp_press_serial_node/temp_press"/>
+	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)" output="screen">
+		<param name="starting_time" value="$(arg starting_time)"/>
+	</node>
+	</group>
+</launch>
