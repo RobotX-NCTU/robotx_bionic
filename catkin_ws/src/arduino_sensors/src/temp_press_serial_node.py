@@ -23,24 +23,24 @@ class TempPressSerialNode(object):
 
 	def cb(self, no_use):
 		res_str = self.ard.readline()
-		i2 =  res_str.split(" ")[3].split("\r")[0]
-		i1 = res_str.split(" ")[2]
+		#i2 =  res_str.split(" ")[3].split("\r")[0]
+		#i1 = res_str.split(" ")[2]
         temp_cpu = self.get_cpu_temp()
 		temp =  res_str.split(" ")[1]
 		press = res_str.split(" ")[0]
 		print "temperature: ", temp
         print "temperature on cpu: ", temp_cpu
 		print "pressure: ", press
-		print "I1: ", i1
-		print "I2: ", i2
+		#print "I1: ", i1
+		#print "I2: ", i2
 		print "---------------------"
 		temp_press_msg = TemperaturePressure()
 		temp_press_msg.header.stamp = rospy.Time.now()
 		temp_press_msg.temperature = temp
         temp_press_msg.temperature_cpu = temp_cpu
 		temp_press_msg.pressure = press
-		temp_press_msg.current1 = i1
-		temp_press_msg.current2 = i2
+		#temp_press_msg.current1 = i1
+		#temp_press_msg.current2 = i2
 		self.temp_press_pub.publish(temp_press_msg)
 		#temp_press_msg = String()
 		#temp_press_msg.data = res_str
