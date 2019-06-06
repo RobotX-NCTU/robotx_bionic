@@ -29,7 +29,7 @@ class TempPressSerialNode(object):
 		temp =  res_str.split(" ")[1]
 		press = res_str.split(" ")[0]
 		print "temperature: ", temp
-		"temperature on cpu: ", temp_cpu
+		print "temperature on cpu: ", temp_cpu
 		print "pressure: ", press
 		#print "I1: ", i1
 		#print "I2: ", i2
@@ -45,7 +45,7 @@ class TempPressSerialNode(object):
 		#temp_press_msg = String()
 		#temp_press_msg.data = res_str
 		#self.temp_press_pub.publish(temp_press_msg)
-	
+
 	def get_cpu_temp(self):
 		# Call command like a command line shell and get the return value
 		ret_byte = subprocess.check_output(['vcgencmd', 'measure_temp'])
@@ -62,5 +62,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_press_serial_node", anonymous = False)
 	temp_press_serial_node = TempPressSerialNode()
 	rospy.on_shutdown(temp_press_serial_node.onShutdown)
-	rospy.Timer(rospy.Duration.from_sec(0.2), temp_press_serial_node.cb)
+	rospy.Timer(rospy.Duration.from_sec(1/60:), temp_press_serial_node.cb)
 	rospy.spin()
