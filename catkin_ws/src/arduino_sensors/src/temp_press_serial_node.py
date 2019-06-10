@@ -9,7 +9,9 @@
 #'''
 import rospy
 import serial
+from datetime import datetime
 from std_msgs.msg import String
+import subprocess
 from robotx_bionic_msgs.msg import TemperaturePressure
 
 class TempPressSerialNode(object):
@@ -26,8 +28,9 @@ class TempPressSerialNode(object):
 		#i2 =  res_str.split(" ")[3].split("\r")[0]
 		#i1 = res_str.split(" ")[2]
 		temp_cpu = self.get_cpu_temp()
-		temp =  res_str.split(" ")[1]
+		temp =  res_str.split(" ")[1].split("\r")[0]
 		press = res_str.split(" ")[0]
+		print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		print "temperature: ", temp
 		print "temperature on cpu: ", temp_cpu
 		print "pressure: ", press
@@ -62,5 +65,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_press_serial_node", anonymous = False)
 	temp_press_serial_node = TempPressSerialNode()
 	rospy.on_shutdown(temp_press_serial_node.onShutdown)
-	rospy.Timer(rospy.Duration.from_sec(1/60:), temp_press_serial_node.cb)
+	rospy.Timer(rospy.Duration(1), temp_press_serial_node.cb)
 	rospy.spin()
