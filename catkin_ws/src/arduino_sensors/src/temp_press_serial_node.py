@@ -32,7 +32,7 @@ class TempPressSerialNode(object):
 		press = res_str.split(" ")[0]
 		print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		print "temperature: ", temp
-		print "temperature on cpu: ", temp_cpu
+		print "temperature on cpu: ", str(temp_cpu)
 		print "pressure: ", press
 		#print "I1: ", i1
 		#print "I2: ", i2
@@ -65,5 +65,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_press_serial_node", anonymous = False)
 	temp_press_serial_node = TempPressSerialNode()
 	rospy.on_shutdown(temp_press_serial_node.onShutdown)
-	rospy.Timer(rospy.Duration(1), temp_press_serial_node.cb)
+	rospy.Timer(rospy.Duration(60), temp_press_serial_node.cb)
 	rospy.spin()
