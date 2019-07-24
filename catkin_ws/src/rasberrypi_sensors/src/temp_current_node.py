@@ -27,19 +27,20 @@ class TempCurrentNode(object):
 
 	def cb(self, no_use):
 		temp_cpu = self.get_cpu_temp()
-		ina219 = self.ina219_read()
+		current,power,shunt_vol = self.ina219_read()
 		print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		print "current from ina219:",ina219
+		print "power: ", power
+		print "voltage: ",shunt_vol
+		print "current:",current
 		print "temperature on cpu: ", str(temp_cpu)
-		#print "pressure: ", press
 		print "---------------------"
 		temp_press_msg = TemperatureCurrent()
 		temp_press_msg.header.stamp = rospy.Time.now()
 		#temp_press_msg.temperature = temp
 		temp_press_msg.temperature_cpu = str(temp_cpu)
-		#temp_press_msg.pressure = press
-		temp_press_msg.current = str(ina219)
-		#temp_press_msg.current2 = i2
+		temp_press_msg.power = str(power)
+		temp_press_msg.current = str(current)
+		temp_press_msg.voltage = str(shunt_vol)
 		self.temp_current_pub.publish(temp_press_msg)
 		#temp_press_msg = String()
 		#temp_press_msg.data = res_str
@@ -57,16 +58,18 @@ class TempCurrentNode(object):
 	    ina = INA219(SHUNT_OHMS)
 	    ina.configure()
 	
-	    print("Bus Voltage: %.3f V" % ina.voltage())
+	    #print("Bus Voltage: %.3f V" % ina.voltage())
 	    try:
-		ina_current =  ina.current()	
-	        print("Bus Current: %.3f mA" % ina_current)
+		ina_current =  ina.current()
+		power=ina.power()
+		shunt_voltage=ina.shunt_voltage()	
+	        #print("Bus Current: %.3f mA" % ina_current)
 	        #print("Power: %.3f mW" % ina.power())
 	        #print("Shunt voltage: %.3f mV" % ina.shunt_voltage())
 	    except DeviceRangeError as e:
 		 # Current out of device range with specified shunt resister
 	        print(e)
-	    return ina_current
+	    return ina_current,power,shunt_voltage
 	def onShutdown(self):
 		rospy.loginfo("[%s] Shutdown " %(self.node_name))
 

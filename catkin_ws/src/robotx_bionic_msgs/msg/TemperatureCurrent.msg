@@ -1,6 +1,6 @@
 Header header
 #string temperature
-#string pressure
+string power
 string current
-#string current2
+string voltage
 string temperature_cpu
