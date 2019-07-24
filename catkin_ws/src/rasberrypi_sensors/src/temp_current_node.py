@@ -77,5 +77,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_current_node", anonymous = False)
 	temp_current_node = TempCurrentNode()
 	rospy.on_shutdown(temp_current_node.onShutdown)
-	rospy.Timer(rospy.Duration(2), temp_current_node.cb)
+	rospy.Timer(rospy.Duration(30), temp_current_node.cb)
 	rospy.spin()
