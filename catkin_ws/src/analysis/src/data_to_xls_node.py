@@ -22,6 +22,7 @@ class DataToXlsNode(object):
 		self.sheet1.write(0, 1, "True Time")
 		self.sheet1.write(0, 2, "Temperature")
 		self.sheet1.write(0, 3, "Pressure")
+		self.sheet1.write(0, 4, "T_CPU")
 		self.home = expanduser("~")
 
         # get real time shift
@@ -47,6 +48,7 @@ class DataToXlsNode(object):
 		self.sheet1.write(self.index, 1, str(real_time))
 		self.sheet1.write(self.index, 2, str(temp_press_msg.temperature))
 		self.sheet1.write(self.index, 3, str(temp_press_msg.pressure))
+		self.sheet1.write(self.index, 4, str(temp_press_msg.temperature_cpu))
 
 	def onShutdown(self):
 		rospy.loginfo("[%s] Shutdown " %(self.node_name))
