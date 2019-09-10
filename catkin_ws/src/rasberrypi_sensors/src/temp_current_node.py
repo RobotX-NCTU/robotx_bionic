@@ -17,6 +17,8 @@ from ina219 import INA219
 from ina219 import DeviceRangeError
 
 SHUNT_OHMS = 0.1
+ina = INA219(SHUNT_OHMS)
+ina.configure()
 
 class TempCurrentNode(object):
 	def __init__(self):
@@ -54,10 +56,12 @@ class TempCurrentNode(object):
 		# Cut string from 'equal symbol' to 'degree C symbol', then convert to float
 		cpu_temp = float(ret_str[ret_str.find('=')+1: ret_str.find('\'')])
 		return cpu_temp
-	def ina219_read(self):
-	    ina = INA219(SHUNT_OHMS)
-	    ina.configure()
 	
+	def ina219_read(self):
+	    ina_current =  -1
+            power = -1
+            shunt_voltage = -1
+
 	    #print("Bus Voltage: %.3f V" % ina.voltage())
 	    try:
 		ina_current =  ina.current()
@@ -70,6 +74,7 @@ class TempCurrentNode(object):
 		 # Current out of device range with specified shunt resister
 	        print(e)
 	    return ina_current,power,shunt_voltage
+
 	def onShutdown(self):
 		rospy.loginfo("[%s] Shutdown " %(self.node_name))
 
