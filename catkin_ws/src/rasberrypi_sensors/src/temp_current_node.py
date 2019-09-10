@@ -15,6 +15,7 @@ import subprocess
 from robotx_bionic_msgs.msg import TemperatureCurrent
 from ina219 import INA219
 from ina219 import DeviceRangeError
+import time
 
 SHUNT_OHMS = 0.1
 ina = INA219(SHUNT_OHMS)
@@ -61,7 +62,7 @@ class TempCurrentNode(object):
 	    ina_current =  -1
             power = -1
             shunt_voltage = -1
-
+	    time.sleep(1)
 	    #print("Bus Voltage: %.3f V" % ina.voltage())
 	    try:
 		ina_current =  ina.current()
@@ -73,6 +74,8 @@ class TempCurrentNode(object):
 	    except DeviceRangeError as e:
 		 # Current out of device range with specified shunt resister
 	        print(e)
+		ina.configure()
+		time.sleep(1)
 	    return ina_current,power,shunt_voltage
 
 	def onShutdown(self):
@@ -82,5 +85,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_current_node", anonymous = False)
 	temp_current_node = TempCurrentNode()
 	rospy.on_shutdown(temp_current_node.onShutdown)
-	rospy.Timer(rospy.Duration(30), temp_current_node.cb)
+	rospy.Timer(rospy.Duration(2), temp_current_node.cb)
 	rospy.spin()
