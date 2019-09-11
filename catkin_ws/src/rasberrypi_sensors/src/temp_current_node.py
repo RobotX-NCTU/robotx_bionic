@@ -30,11 +30,12 @@ class TempCurrentNode(object):
 
 	def cb(self, no_use):
 		temp_cpu = self.get_cpu_temp()
-		current,power,shunt_vol = self.ina219_read()
-		print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		print "power: ", power
-		print "voltage: ",shunt_vol
-		print "current:",current
+		#current,power,shunt_vol = self.ina219_read()
+		current, power, shunt_vol = self.ina219_read_samliu()
+	        print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+		print "voltage: {:5.3f} mV ".format(shunt_vol)
+		print "current: {:5.3f} mA".format(current)
+	        print "  power: {:5.3f} mW".format(power)
 		print "temperature on cpu: ", str(temp_cpu)
 		print "---------------------"
 		temp_press_msg = TemperatureCurrent()
@@ -78,6 +79,18 @@ class TempCurrentNode(object):
 		time.sleep(1)
 	    return ina_current,power,shunt_voltage
 
+
+	def ina219_read_samliu(self):
+            try:
+                i =  ina.current()
+                p = ina.power()
+                v = ina.supply_voltage()
+            except DeviceRangeError as e:
+                 # Current out of device range with specified shunt resister
+                 i, v, p = -1, -1, -1
+	         print(e)
+            return i, p, v
+
 	def onShutdown(self):
 		rospy.loginfo("[%s] Shutdown " %(self.node_name))
 
@@ -85,5 +98,5 @@ if __name__ == '__main__':
 	rospy.init_node("temp_current_node", anonymous = False)
 	temp_current_node = TempCurrentNode()
 	rospy.on_shutdown(temp_current_node.onShutdown)
-	rospy.Timer(rospy.Duration(2), temp_current_node.cb)
+	rospy.Timer(rospy.Duration(2), temp_current_node.cb)  # 15
 	rospy.spin()
