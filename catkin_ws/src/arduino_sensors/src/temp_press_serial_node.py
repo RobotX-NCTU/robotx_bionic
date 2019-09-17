@@ -27,12 +27,12 @@ class TempPressSerialNode(object):
 		res_str = self.ard.readline()
 		#i2 =  res_str.split(" ")[3].split("\r")[0]
 		#i1 = res_str.split(" ")[2]
-		temp_cpu = self.get_cpu_temp()
+		temp_cpu = str(self.get_cpu_temp())
 		temp =  res_str.split(" ")[1].split("\r")[0]
 		press = res_str.split(" ")[0]
 		print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		print "temperature: ", temp
-		print "temperature on cpu: ", str(temp_cpu)
+		print "temperature on cpu: ", temp_cpu
 		print "pressure: ", press
 		#print "I1: ", i1
 		#print "I2: ", i2
