@@ -1,0 +1,7 @@
+<launch>
+	<arg name="pkg_name" default="rasberrypi_sensors" />
+	<arg name="node_name" default="temp_current_8A_node" />
+
+	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)" output="screen">
+	</node>
+</launch>
