@@ -112,3 +112,10 @@ rpi3$ source ~/robotx_bionic/environment.sh
 rpi3$ rosbag record /fix /temp_current_8A_node/temp_current --chunksize=1
 ```
 
+## Fix active bag
+
+```
+laptop$ rosbag reindex xxx.bag.active
+laptop$ rosbag fix xxx.bag.active xxx.bag
+laptop$ rm -f *.orig.active
+```
