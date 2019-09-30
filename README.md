@@ -80,29 +80,35 @@ laptop$ roscore
 ```
 terminal 2:
 ```
-laptop$ roslaunch robotx_bionic data_to_xls.launch veh:=bamboobota starting_time:=2018-10-02-10-43-00
+laptop$ roslaunch robotx_bionic data_to_xls.launch starting_time:=2018-10-02-10-43-00
 ```
 terminal 3:
 ```
-laptop$  rosbag play bamboobota_2018-10-02-10-43-35_0.bag
+laptop$  rosbag play BAGNAME.bag
 ```
 
-## recording temparature and pressure 
-Connect to "sean-rv" Wi-Fi router
+## Recording Temparature
+Connect to "jason_car" Wi-Fi router
+
 ```
-laptop$ ssh sean_devel@10.42.0.1 pwd: sean85914
+laptop$ ssh agvduck@10.42.0.1 pwd: agvduck
+```
+```
 rpi3$ byobu
 ```
-terminal 1:
+terminal 1: Turn on current sensor
 ```
 rpi3$ source ~/robotx_bionic/environment.sh
-rpi3$ $export ROS_MASTER_URI=http://10.42.0.1:11311/
-rpi3$ roslaunch robotx_bionic sensor_measurement.launch veh:=bamboobota
+rpi3$ roslaunch rasberrypi_sensors temp_current.launch 
 ```
-terminal 2:
+terminal 2: Turn on GPS
 ```
 rpi3$ source ~/robotx_bionic/environment.sh
-rpi3$ export ROS_MASTER_URI=http://10.42.0.1:11311/
-rpi3$ rosbag record -a -o bamboobota_tem_press --split 1024
+rpi3$ roslaunch robotx_bionic sensor.launch 
+```
+terminal 3:
+```
+rpi3$ source ~/robotx_bionic/environment.sh
+rpi3$ rosbag record /fix /temp_current_8A_node/temp_current --chunksize=1
 ```
 
