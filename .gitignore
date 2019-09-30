@@ -14,3 +14,5 @@ catkin_ws/.catkin_workspace
 catkin_ws/src/moos/moos-ros-bridge/moosros_tester/bin/
 *.xls
 catkin_ws/src/analysis/jupyter/.ipynb_checkpoints/
+*.active
+*.bag.tmp
