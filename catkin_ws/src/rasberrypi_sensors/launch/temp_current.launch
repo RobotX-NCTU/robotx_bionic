@@ -1,7 +1,16 @@
 <launch>
 	<arg name="pkg_name" default="rasberrypi_sensors" />
-	<arg name="node_name" default="temp_current_8A_node" />
+	<!--<arg name="node_name" default="temp_current_8A_node" /-->
 
-	<node pkg="$(arg pkg_name)" type="$(arg node_name).py" name="$(arg node_name)" output="screen">
+	<node pkg="$(arg pkg_name)" type="temperature_node.py" name="Temperature_node" output="screen">
 	</node>
+
+	<node pkg="$(arg pkg_name)" type="current_8A_node.py" name="current_8A_node_1" output="screen">
+                <param name="addr" value="A1"/>
+        </node>
+	
+	<node pkg="$(arg pkg_name)" type="current_8A_node.py" name="current_8A_node_2" output="screen">
+                <param name="addr" value="A4"/>
+        </node>
+
 </launch>
