@@ -54,6 +54,8 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    TemperaturePressure.msg
    TemperatureCurrent.msg
+   Temperature.msg
+   Current.msg
  )
 
 ## Generate services in the 'srv' folder
