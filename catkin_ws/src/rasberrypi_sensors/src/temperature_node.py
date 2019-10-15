@@ -4,20 +4,19 @@
 # Read temperature data measured from DS18B20 through serial
 # and publish as ROS topic 
 # Editor: Sean, Lu
-# Last update: 3/31, 2018
+# Last update: 10/15 by Lili Chiu
 #'''
 #    Update: add port as parameter (3/30, 2018)
 #    Update: add try except, use timer (3/31, 2018)
+#    
 #'''
 import rospy
 import serial
-from datetime import datetime
+#from datetime import datetime
 from std_msgs.msg import String
 import subprocess
 from robotx_bionic_msgs.msg import Temperature
-
 import time
-
 
 
 class Temperature_node(object):
@@ -28,9 +27,9 @@ class Temperature_node(object):
 
         def cb(self, no_use):
                 temp_cpu = self.get_cpu_temp()
-                print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print "temperature on cpu: ", str(temp_cpu)
-                print "---------------------"
+                #print datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                #print "temperature on cpu: ", str(temp_cpu)
+                #print "---------------------"
                 temp_msg = Temperature()
                 temp_msg.header.stamp = rospy.Time.now()
                 temp_msg.temperature_cpu = str(temp_cpu)
@@ -55,14 +54,3 @@ if __name__ == '__main__':
         rospy.Timer(rospy.Duration(2), temperature_node.cb)  # 15
         rospy.spin()
 
-#def main():
-#    while True:
-#        time.sleep(1)
-#        print ("Shunt Voltage : %.2f mV" % ina.get_shunt_voltage_mV())
-#        print ("Bus Voltage   : %.3f V" % ina.get_bus_voltage_V())
-#        print ("Current       : %.f mA" % ina.get_current_mA())
-#        print ("Power         : %.f mW" % ina.get_power_mW())
-#        print (" ")
-
-#if __name__ == "__main__":
-#    main()
